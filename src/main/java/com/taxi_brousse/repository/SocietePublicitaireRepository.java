@@ -10,4 +10,6 @@ import com.taxi_brousse.entity.SocietePublicitaire;
 @Repository
 public interface SocietePublicitaireRepository extends JpaRepository<SocietePublicitaire, Long> {
     List<SocietePublicitaire> findByActifTrueOrderByNomAsc();
+
+    boolean existsByCode(String code);
 }

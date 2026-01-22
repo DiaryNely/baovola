@@ -227,6 +227,16 @@ public class GestionController {
         return "taxi_brousse/tarifs-publicite";
     }
 
+    @GetMapping("/societes-publicitaires")
+    public String listSocietesPublicitaires(Model model) {
+        return "taxi_brousse/societes-publicitaires";
+    }
+
+    @GetMapping("/publicites")
+    public String listPublicites(Model model) {
+        return "taxi_brousse/publicites";
+    }
+
     @GetMapping("/diffusions-publicite")
     public String listDiffusionsPublicite(Model model) {
         return "taxi_brousse/diffusions-publicite";

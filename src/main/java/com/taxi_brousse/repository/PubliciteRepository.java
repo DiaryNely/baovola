@@ -2,6 +2,7 @@ package com.taxi_brousse.repository;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -32,4 +33,6 @@ public interface PubliciteRepository extends JpaRepository<Publicite, Long> {
      */
     @Query("SELECT p FROM Publicite p WHERE p.societePublicitaire.id = :societeId ORDER BY p.dateDebutValidite DESC")
     List<Publicite> findBySocietePublicitaireId(@Param("societeId") Long societeId);
+
+    Optional<Publicite> findByCode(String code);
 }

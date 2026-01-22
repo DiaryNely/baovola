@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Paiements Publicité - Gestion Taxi Brousse</title>
+    <link href="vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">
+    <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet" type="text/css">
+    <link href="css/ruang-admin.min.css" rel="stylesheet">
+    <link href="vendor/datatables/dataTables.bootstrap4.min.css" rel="stylesheet">
+</head>
+
+<body id="page-top">
+    <div id="wrapper">
+        <!-- Sidebar -->
+        <div th:replace="~{taxi_brousse/fragments :: sidebar}"></div>
+
+        <!-- Content Wrapper -->
+        <div id="content-wrapper" class="d-flex flex-column">
+            <div id="content">
+                <!-- TopBar -->
+                <div th:replace="~{taxi_brousse/fragments :: topbar}"></div>
+
+                <!-- Container Fluid-->
+                <div class="container-fluid" id="container-wrapper">
+                    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+                        <h1 class="h3 mb-0 text-gray-800">Paiements Publicité</h1>
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item"><a href="/">Accueil</a></li>
+                            <li class="breadcrumb-item">Publicité</li>
+                            <li class="breadcrumb-item active" aria-current="page">Paiements</li>
+                        </ol>
+                    </div>
+
+                    <!-- Sélection société -->
+                    <div class="row mb-3">
+                        <div class="col-lg-12">
+                            <div class="card mb-4">
+                                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                                    <h6 class="m-0 font-weight-bold text-primary">Sélection de la société</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="form-row align-items-end">
+                                        <div class="form-group col-md-8">
+                                            <label for="societeSelect">Société publicitaire</label>
+                                            <select id="societeSelect" class="form-control">
+                                                <option value="">-- Sélectionnez une société --</option>
+                                            </select>
+                                        </div>
+                                        <div class="form-group col-md-4">
+                                            <button class="btn btn-primary" onclick="chargerPaiements()">
+                                                <i class="fas fa-search"></i> Charger
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Résumé -->
+                    <div class="row" id="resumeRow" style="display: none;">
+                        <div class="col-lg-4">
+                            <div class="card mb-4 bg-info text-white">
+                                <div class="card-body">
+                                    <h5 class="card-title">Total facturé</h5>
+                                    <p class="h3" id="montantFacture">0 Ar</p>
+                                    <p>montant à payer</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-4">
+                            <div class="card mb-4 bg-success text-white">
+                                <div class="card-body">
+                                    <h5 class="card-title">Déjà payé</h5>
+                                    <p class="h3" id="montantPaye">0 Ar</p>
+                                    <p>paiements reçus</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-4">
+                            <div class="card mb-4 bg-warning text-white">
+                                <div class="card-body">
+                                    <h5 class="card-title">Reste à payer</h5>
+                                    <p class="h3" id="montantRestant">0 Ar</p>
+                                    <p>solde</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Historique -->
+                    <div class="row" id="paiementsRow" style="display: none;">
+                        <div class="col-lg-12">
+                            <div class="card mb-4">
+                                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                                    <h6 class="m-0 font-weight-bold text-primary">Historique des paiements</h6>
+                                    <button class="btn btn-primary btn-sm" onclick="showAddPaiementModal()">
+                                        <i class="fas fa-plus"></i> Nouveau paiement
+                                    </button>
+                                </div>
+                                <div class="card-body">
+                                    <div class="table-responsive">
+                                        <table class="table table-bordered table-hover" id="paiementsTable" width="100%" cellspacing="0">
+                                            <thead>
+                                                <tr>
+                                                    <th>Date</th>
+                                                    <th>Montant</th>
+                                                    <th>Note</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody></tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row" id="emptyRow" style="display: none;">
+                        <div class="col-lg-12">
+                            <div class="alert alert-warning">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                Aucun paiement trouvé pour cette société.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!---Container Fluid-->
+            </div>
+
+            <!-- Footer -->
+            <div th:replace="~{taxi_brousse/fragments :: footer}"></div>
+        </div>
+    </div>
+
+    <!-- Scroll to top -->
+    <a class="scroll-to-top rounded" href="#page-top">
+        <i class="fas fa-angle-up"></i>
+    </a>
+
+    <!-- Logout Modal -->
+    <div th:replace="~{taxi_brousse/fragments :: logoutModal}"></div>
+
+    <!-- Modal Ajouter Paiement -->
+    <div class="modal fade" id="addPaiementModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Nouveau paiement</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="addPaiementForm">
+                        <div class="form-group">
+                            <label for="montantPaiement">Montant *</label>
+                            <input type="number" class="form-control" id="montantPaiement" min="1" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="datePaiement">Date paiement</label>
+                            <input type="datetime-local" class="form-control" id="datePaiement">
+                        </div>
+                        <div class="form-group">
+                            <label for="notePaiement">Note</label>
+                            <textarea class="form-control" id="notePaiement" rows="2"></textarea>
+                        </div>
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i>
+                            Paiement partiel autorisé. Le solde sera automatiquement recalculé.
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuler</button>
+                    <button type="button" class="btn btn-primary" onclick="savePaiement()">
+                        <i class="fas fa-save"></i> Enregistrer
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="vendor/jquery/jquery.min.js"></script>
+    <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="vendor/jquery-easing/jquery.easing.min.js"></script>
+    <script src="js/ruang-admin.min.js"></script>
+    <script src="vendor/datatables/jquery.dataTables.min.js"></script>
+    <script src="vendor/datatables/dataTables.bootstrap4.min.js"></script>
+
+    <script th:inline="none">
+        let paiementsTable = null;
+        let selectedSocieteId = null;
+        let deviseSymbole = 'Ar';
+
+        $(document).ready(function() {
+            loadSocietes();
+        });
+
+        function loadSocietes() {
+            $.ajax({
+                url: '/api/societes-publicitaires/actives',
+                method: 'GET',
+                success: function(societes) {
+                    const select = $('#societeSelect');
+                    select.empty().append('<option value="">-- Sélectionnez une société --</option>');
+                    societes.forEach(s => {
+                        const option = $('<option>').val(s.id).text(`${s.code} - ${s.nom}`);
+                        select.append(option);
+                    });
+                },
+                error: function() {
+                    console.error('Erreur chargement sociétés');
+                }
+            });
+        }
+
+        function chargerPaiements() {
+            selectedSocieteId = $('#societeSelect').val();
+            if (!selectedSocieteId) {
+                alert('Veuillez sélectionner une société');
+                return;
+            }
+
+            $.ajax({
+                url: `/api/paiements-publicite/societe/${selectedSocieteId}/resume`,
+                method: 'GET',
+                success: function(resume) {
+                    deviseSymbole = resume.deviseSymbole || 'Ar';
+                    $('#montantFacture').text(formatMontant(resume.montantTotalFacture, deviseSymbole));
+                    $('#montantPaye').text(formatMontant(resume.montantTotalPaye, deviseSymbole));
+                    $('#montantRestant').text(formatMontant(resume.montantRestant, deviseSymbole));
+                    $('#resumeRow').show();
+                }
+            });
+
+            $.ajax({
+                url: `/api/paiements-publicite/societe/${selectedSocieteId}`,
+                method: 'GET',
+                success: function(paiements) {
+                    displayPaiements(paiements);
+                }
+            });
+        }
+
+        function displayPaiements(paiements) {
+            if (paiementsTable) {
+                paiementsTable.destroy();
+            }
+            const tbody = $('#paiementsTable tbody');
+            tbody.empty();
+
+            if (!paiements || paiements.length === 0) {
+                $('#paiementsRow').hide();
+                $('#emptyRow').show();
+                return;
+            }
+
+            paiements.forEach(p => {
+                const tr = $('<tr>');
+                tr.append($('<td>').text(formatDateTime(p.datePaiement)));
+                tr.append($('<td>').text(formatMontant(p.montant, p.deviseSymbole || deviseSymbole)));
+                tr.append($('<td>').text(p.note || ''));
+                tbody.append(tr);
+            });
+
+            paiementsTable = $('#paiementsTable').DataTable({
+                language: {
+                    url: 'https://cdn.datatables.net/plug-ins/1.13.7/i18n/fr-FR.json'
+                },
+                order: [[0, 'desc']]
+            });
+
+            $('#emptyRow').hide();
+            $('#paiementsRow').show();
+        }
+
+        function showAddPaiementModal() {
+            if (!selectedSocieteId) {
+                alert('Veuillez sélectionner une société');
+                return;
+            }
+            $('#montantPaiement').val('');
+            $('#datePaiement').val('');
+            $('#notePaiement').val('');
+            $('#addPaiementModal').modal('show');
+        }
+
+        function savePaiement() {
+            const montant = parseFloat($('#montantPaiement').val());
+            const datePaiement = $('#datePaiement').val();
+            const note = $('#notePaiement').val();
+
+            if (!montant || montant <= 0) {
+                alert('Montant invalide');
+                return;
+            }
+
+            const data = {
+                societePublicitaireId: selectedSocieteId,
+                montant: montant,
+                datePaiement: datePaiement || null,
+                note: note || null
+            };
+
+            $.ajax({
+                url: '/api/paiements-publicite',
+                method: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(data),
+                success: function() {
+                    $('#addPaiementModal').modal('hide');
+                    chargerPaiements();
+                },
+                error: function(xhr) {
+                    const msg = xhr.responseJSON?.message || 'Erreur lors du paiement';
+                    alert(msg);
+                }
+            });
+        }
+
+        function formatMontant(montant, symbole) {
+            if (!montant) return '0 ' + (symbole || '');
+            return new Intl.NumberFormat('fr-FR').format(montant) + ' ' + (symbole || '');
+        }
+
+        function formatDateTime(dateStr) {
+            if (!dateStr) return '';
+            const date = new Date(dateStr);
+            return date.toLocaleString('fr-FR');
+        }
+    </script>
+</body>
+</html>

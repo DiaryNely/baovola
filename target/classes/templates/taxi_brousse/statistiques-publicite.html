@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Statistiques CA Publicité - Gestion Taxi Brousse</title>
+    <link href="vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">
+    <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet" type="text/css">
+    <link href="css/ruang-admin.min.css" rel="stylesheet">
+    <link href="vendor/datatables/dataTables.bootstrap4.min.css" rel="stylesheet">
+</head>
+
+<body id="page-top">
+    <div id="wrapper">
+        <!-- Sidebar -->
+        <div th:replace="~{taxi_brousse/fragments :: sidebar}"></div>
+
+        <!-- Content Wrapper -->
+        <div id="content-wrapper" class="d-flex flex-column">
+            <div id="content">
+                <!-- TopBar -->
+                <div th:replace="~{taxi_brousse/fragments :: topbar}"></div>
+
+                <!-- Container Fluid-->
+                <div class="container-fluid" id="container-wrapper">
+                    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+                        <h1 class="h3 mb-0 text-gray-800">Statistiques CA - Publicité Vidéo</h1>
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item"><a href="/">Accueil</a></li>
+                            <li class="breadcrumb-item">Publicité</li>
+                            <li class="breadcrumb-item active" aria-current="page">Statistiques CA</li>
+                        </ol>
+                    </div>
+
+                    <!-- Filtres -->
+                    <div class="row mb-3">
+                        <div class="col-lg-12">
+                            <div class="card mb-4">
+                                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                                    <h6 class="m-0 font-weight-bold text-primary">Filtrer par période</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="form-row align-items-end">
+                                        <div class="form-group col-md-4">
+                                            <label for="moisSelect">Mois</label>
+                                            <select id="moisSelect" class="form-control">
+                                                <option value="1">Janvier</option>
+                                                <option value="2">Février</option>
+                                                <option value="3">Mars</option>
+                                                <option value="4">Avril</option>
+                                                <option value="5">Mai</option>
+                                                <option value="6">Juin</option>
+                                                <option value="7">Juillet</option>
+                                                <option value="8">Août</option>
+                                                <option value="9">Septembre</option>
+                                                <option value="10">Octobre</option>
+                                                <option value="11">Novembre</option>
+                                                <option value="12">Décembre</option>
+                                            </select>
+                                        </div>
+                                        <div class="form-group col-md-4">
+                                            <label for="anneeInput">Année</label>
+                                            <input type="number" class="form-control" id="anneeInput" min="2000" max="2100">
+                                        </div>
+                                        <div class="form-group col-md-4">
+                                            <button class="btn btn-primary" onclick="chargerStats()">
+                                                <i class="fas fa-filter"></i> Appliquer
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <small class="text-muted">Les statistiques sont basées sur la date de diffusion.</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Résumé -->
+                    <div class="row" id="resumeRow" style="display: none;">
+                        <div class="col-lg-4">
+                            <div class="card mb-4 bg-primary text-white">
+                                <div class="card-body">
+                                    <h5 class="card-title">Total diffusions</h5>
+                                    <p class="h3" id="totalRepetitions">0</p>
+                                    <p>répétitions</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-4">
+                            <div class="card mb-4 bg-success text-white">
+                                <div class="card-body">
+                                    <h5 class="card-title">Chiffre d'affaires</h5>
+                                    <p class="h3" id="totalCa">0 Ar</p>
+                                    <p id="periodeLabel">période</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-4">
+                            <div class="card mb-4 bg-info text-white">
+                                <div class="card-body">
+                                    <h5 class="card-title">Publicités actives</h5>
+                                    <p class="h3" id="nombrePublicites">0</p>
+                                    <p>publicités</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Détails -->
+                    <div class="row" id="detailsRow" style="display: none;">
+                        <div class="col-lg-12">
+                            <div class="card mb-4">
+                                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                                    <h6 class="m-0 font-weight-bold text-primary">Détail par publicité</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="table-responsive">
+                                        <table class="table table-bordered table-hover" id="statsTable" width="100%" cellspacing="0">
+                                            <thead>
+                                                <tr>
+                                                    <th>Publicité</th>
+                                                    <th>Société</th>
+                                                    <th>Répétitions</th>
+                                                    <th>Tarif unitaire</th>
+                                                    <th>Montant</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody></tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row" id="emptyRow" style="display: none;">
+                        <div class="col-lg-12">
+                            <div class="alert alert-warning">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                Aucune diffusion trouvée pour la période sélectionnée.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!---Container Fluid-->
+            </div>
+
+            <!-- Footer -->
+            <div th:replace="~{taxi_brousse/fragments :: footer}"></div>
+        </div>
+    </div>
+
+    <!-- Scroll to top -->
+    <a class="scroll-to-top rounded" href="#page-top">
+        <i class="fas fa-angle-up"></i>
+    </a>
+
+    <!-- Logout Modal -->
+    <div th:replace="~{taxi_brousse/fragments :: logoutModal}"></div>
+
+    <script src="vendor/jquery/jquery.min.js"></script>
+    <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="vendor/jquery-easing/jquery.easing.min.js"></script>
+    <script src="js/ruang-admin.min.js"></script>
+    <script src="vendor/datatables/jquery.dataTables.min.js"></script>
+    <script src="vendor/datatables/dataTables.bootstrap4.min.js"></script>
+
+    <script th:inline="none">
+        let statsTable = null;
+
+        $(document).ready(function() {
+            const now = new Date();
+            $('#moisSelect').val(now.getMonth() + 1);
+            $('#anneeInput').val(now.getFullYear());
+            chargerStats();
+        });
+
+        function chargerStats() {
+            const mois = $('#moisSelect').val();
+            const annee = $('#anneeInput').val();
+
+            $.ajax({
+                url: `/api/statistiques-publicite/ca?mois=${mois}&annee=${annee}`,
+                method: 'GET',
+                success: function(stats) {
+                    afficherResume(stats);
+                    afficherDetails(stats);
+                },
+                error: function() {
+                    console.error('Erreur lors du chargement des statistiques');
+                }
+            });
+        }
+
+        function afficherResume(stats) {
+            const moisLabel = $('#moisSelect option:selected').text();
+            $('#totalRepetitions').text(stats.totalRepetitions || 0);
+            $('#totalCa').text(formatMontant(stats.montantTotal, stats.deviseSymbole));
+            $('#nombrePublicites').text(stats.nombrePublicites || 0);
+            $('#periodeLabel').text(`${moisLabel} ${stats.annee}`);
+
+            $('#resumeRow').show();
+        }
+
+        function afficherDetails(stats) {
+            if (statsTable) {
+                statsTable.destroy();
+            }
+
+            const tbody = $('#statsTable tbody');
+            tbody.empty();
+
+            if (!stats.details || stats.details.length === 0) {
+                $('#detailsRow').hide();
+                $('#emptyRow').show();
+                return;
+            }
+
+            stats.details.forEach(row => {
+                const tr = $('<tr>');
+                tr.append($('<td>').text(row.publiciteTitre));
+                tr.append($('<td>').text(row.societeNom));
+                tr.append($('<td>').html(`<span class="badge badge-info">${row.totalRepetitions || 0}</span>`));
+                tr.append($('<td>').html(`<span class="badge badge-warning">${formatMontant(row.tarifUnitaire, row.deviseSymbole)}</span>`));
+                tr.append($('<td>').text(formatMontant(row.montantTotal, row.deviseSymbole)));
+                tbody.append(tr);
+            });
+
+            statsTable = $('#statsTable').DataTable({
+                language: {
+                    url: 'https://cdn.datatables.net/plug-ins/1.13.7/i18n/fr-FR.json'
+                },
+                order: [[4, 'desc']]
+            });
+
+            $('#emptyRow').hide();
+            $('#detailsRow').show();
+        }
+
+        function formatMontant(montant, symbole) {
+            if (!montant) return '0 ' + (symbole || '');
+            return new Intl.NumberFormat('fr-FR').format(montant) + ' ' + (symbole || '');
+        }
+    </script>
+</body>
+</html>

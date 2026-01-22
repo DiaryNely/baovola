@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <title>Taxi Brousse - Tarifs</title>
+  <link href="img/logo/logo.png" rel="icon">
+  <link href="vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">
+  <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet" type="text/css">
+  <link href="vendor/datatables/dataTables.bootstrap4.min.css" rel="stylesheet">
+  <link href="css/ruang-admin.min.css" rel="stylesheet">
+</head>
+
+<body id="page-top">
+  <div id="wrapper">
+    <!-- Sidebar -->
+    <div th:replace="~{taxi_brousse/fragments :: sidebar}"></div>
+    <ul class="navbar-nav sidebar sidebar-light accordion" id="accordionSidebar" style="display:none;">
+      <a class="sidebar-brand d-flex align-items-center justify-content-center" href="/">
+        <div class="sidebar-brand-icon">
+          <img src="img/logo/logo2.png">
+        </div>
+        <div class="sidebar-brand-text mx-3">Taxi Brousse</div>
+      </a>
+      <hr class="sidebar-divider my-0">
+      <li class="nav-item">
+        <a class="nav-link" href="/">
+          <i class="fas fa-fw fa-tachometer-alt"></i>
+          <span>Dashboard</span></a>
+      </li>
+      <hr class="sidebar-divider">
+      <div class="sidebar-heading">Gestion</div>
+      <li class="nav-item">
+        <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseGestion">
+          <i class="fas fa-fw fa-car"></i>
+          <span>Transport</span>
+        </a>
+        <div id="collapseGestion" class="collapse" aria-labelledby="headingGestion" data-parent="#accordionSidebar">
+          <div class="bg-white py-2 collapse-inner rounded">
+            <h6 class="collapse-header">Gestion Transport</h6>
+            <a class="collapse-item" href="/cooperatives">Coopératives</a>
+            <a class="collapse-item" href="/vehicules">Véhicules</a>
+            <a class="collapse-item" href="/chauffeurs">Chauffeurs</a>
+            <a class="collapse-item" href="/trajets">Trajets</a>
+            <a class="collapse-item" href="/lieux">Lieux</a>
+          </div>
+        </div>
+      </li>
+      <li class="nav-item active">
+        <a class="nav-link" href="/tarifs">
+          <i class="fas fa-fw fa-dollar-sign"></i>
+          <span>Tarifs</span>
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseReservation">
+          <i class="fas fa-fw fa-ticket-alt"></i>
+          <span>Réservations</span>
+        </a>
+        <div id="collapseReservation" class="collapse" aria-labelledby="headingReservation" data-parent="#accordionSidebar">
+          <div class="bg-white py-2 collapse-inner rounded">
+            <h6 class="collapse-header">Réservations</h6>
+            <a class="collapse-item" href="/clients">Clients</a>
+            <a class="collapse-item" href="/departs">Départs</a>
+          </div>
+        </div>
+      </li>
+    </ul>
+    <!-- Sidebar -->
+
+    <div id="content-wrapper" class="d-flex flex-column">
+      <div id="content">
+        <!-- TopBar -->
+        <nav class="navbar navbar-expand navbar-light bg-navbar topbar mb-4 static-top">
+          <button id="sidebarToggleTop" class="btn btn-link rounded-circle mr-3">
+            <i class="fa fa-bars"></i>
+          </button>
+          <ul class="navbar-nav ml-auto">
+            <div class="topbar-divider d-none d-sm-block"></div>
+            <li class="nav-item dropdown no-arrow">
+              <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-toggle="dropdown">
+                <img class="img-profile rounded-circle" src="img/boy.png" style="max-width: 60px">
+                <span class="ml-2 d-none d-lg-inline text-white small">Admin</span>
+              </a>
+              <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in">
+                <a class="dropdown-item" href="javascript:void(0);" data-toggle="modal" data-target="#logoutModal">
+                  <i class="fas fa-sign-out-alt fa-sm fa-fw mr-2 text-gray-400"></i>
+                  Logout
+                </a>
+              </div>
+            </li>
+          </ul>
+        </nav>
+        <!-- Topbar -->
+
+        <!-- Container Fluid-->
+        <div class="container-fluid" id="container-wrapper">
+          <div class="d-sm-flex align-items-center justify-content-between mb-4">
+            <h1 class="h3 mb-0 text-gray-800">Gestion des Tarifs</h1>
+            <ol class="breadcrumb">
+              <li class="breadcrumb-item"><a href="/">Home</a></li>
+              <li class="breadcrumb-item active">Tarifs</li>
+            </ol>
+          </div>
+
+          <div class="row">
+            <div class="col-lg-12 mb-4">
+              <div class="card">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                  <h6 class="m-0 font-weight-bold text-primary">Liste des Tarifs</h6>
+                  <button class="btn btn-primary btn-sm" onclick="openTarifModal()">
+                    <i class="fas fa-plus"></i> Nouveau Tarif
+                  </button>
+                </div>
+                <div class="table-responsive p-3">
+                  <table class="table align-items-center table-flush table-hover" id="dataTable">
+                    <thead class="thead-light">
+                      <tr>
+                        <th>ID</th>
+                        <th>Coopérative</th>
+                        <th>Trajet</th>
+                        <th>Type Véhicule</th>
+                        <th>Montant</th>
+                        <th>Devise</th>
+                        <th>Période</th>
+                        <th>Statut</th>
+                        <th style="width: 140px;">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr th:each="tarif : ${tarifs}">
+                        <td th:text="${tarif.id}">1</td>
+                        <td th:text="${tarif.cooperative != null ? tarif.cooperative.nom : '-'}">Coop A</td>
+                        <td>
+                          <strong th:text="${tarif.trajet != null ? tarif.trajet.code : '-'}">TRJ001</strong><br>
+                          <small th:text="${tarif.trajet != null ? tarif.trajet.libelle : '-'}">Antananarivo - Toamasina</small>
+                        </td>
+                        <td th:text="${tarif.refVehiculeType != null ? tarif.refVehiculeType.libelle : '-'}">Minibus</td>
+                        <td><strong th:text="${#numbers.formatDecimal(tarif.montant, 0, 'COMMA', 2, 'POINT')}">35000.00</strong></td>
+                        <td th:text="${tarif.refDevise != null ? tarif.refDevise.code : '-'}">AR</td>
+                        <td>
+                          <small>
+                            Du <span th:text="${#temporals.format(tarif.dateDebut, 'dd/MM/yyyy')}">01/01/2026</span><br>
+                            Au <span th:text="${tarif.dateFin != null ? #temporals.format(tarif.dateFin, 'dd/MM/yyyy') : 'Indéfini'}">-</span>
+                          </small>
+                        </td>
+                        <td>
+                          <span class="badge" 
+                                th:classappend="${tarif.dateDebut != null && !tarif.dateDebut.isAfter(T(java.time.LocalDate).now()) && (tarif.dateFin == null || !tarif.dateFin.isBefore(T(java.time.LocalDate).now())) ? 'badge-success' : 'badge-secondary'}"
+                                th:text="${tarif.dateDebut != null && !tarif.dateDebut.isAfter(T(java.time.LocalDate).now()) && (tarif.dateFin == null || !tarif.dateFin.isBefore(T(java.time.LocalDate).now())) ? 'Actif' : 'Inactif'}">
+                            Actif
+                          </span>
+                        </td>
+                        <td class="text-nowrap">
+                          <a href="#" class="btn btn-sm btn-info" title="Voir" 
+                             th:attr="data-id=${tarif.id}" 
+                             onclick="event.preventDefault(); viewTarif(this.getAttribute('data-id'))">
+                            <i class="fas fa-eye"></i>
+                          </a>
+                          <a href="#" class="btn btn-sm btn-warning" title="Modifier" 
+                             th:attr="data-id=${tarif.id}" 
+                             onclick="event.preventDefault(); editTarif(this.getAttribute('data-id'))">
+                            <i class="fas fa-edit"></i>
+                          </a>
+                          <a href="#" class="btn btn-sm btn-danger" title="Supprimer" 
+                             th:attr="data-id=${tarif.id}, data-cooperative=${tarif.cooperative != null ? tarif.cooperative.nom : ''}, data-trajet=${tarif.trajet != null ? tarif.trajet.code : ''}" 
+                             onclick="event.preventDefault(); confirmDeleteTarif(this.getAttribute('data-id'), this.getAttribute('data-cooperative'), this.getAttribute('data-trajet'))">
+                            <i class="fas fa-trash"></i>
+                          </a>
+                        </td>
+                      </tr>
+                      <tr th:if="${#lists.isEmpty(tarifs)}">
+                        <td colspan="9" class="text-center text-muted">Aucun tarif enregistré</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!--Row-->
+
+          <!-- Modal Création/Modification Tarif -->
+          <div class="modal fade" id="tarifModal" tabindex="-1">
+            <div class="modal-dialog modal-lg">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title" id="tarifModalTitle">Nouveau Tarif</h5>
+                  <button type="button" class="close" data-dismiss="modal">&times;</button>
+                </div>
+                <div class="modal-body">
+                  <form id="tarifForm">
+                    <input type="hidden" id="tarifId">
+                    <div class="row">
+                      <div class="col-md-6 mb-3">
+                        <label for="tarifCooperativeId">Coopérative *</label>
+                        <select class="form-control" id="tarifCooperativeId" required>
+                          <option value="">Sélectionner une coopérative</option>
+                        </select>
+                      </div>
+                      <div class="col-md-6 mb-3">
+                        <label for="tarifTrajetId">Trajet *</label>
+                        <select class="form-control" id="tarifTrajetId" required>
+                          <option value="">Sélectionner un trajet</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div class="row">
+                      <div class="col-md-6 mb-3">
+                        <label for="tarifRefVehiculeTypeId">Type de Véhicule *</label>
+                        <select class="form-control" id="tarifRefVehiculeTypeId" required>
+                          <option value="">Sélectionner un type</option>
+                        </select>
+                      </div>
+                      <div class="col-md-6 mb-3">
+                        <label for="tarifRefDeviseId">Devise *</label>
+                        <select class="form-control" id="tarifRefDeviseId" required>
+                          <option value="">Sélectionner une devise</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div class="row">
+                      <div class="col-md-12 mb-3">
+                        <label for="tarifMontant">Montant *</label>
+                        <input type="number" step="0.01" min="0.01" class="form-control" id="tarifMontant" required>
+                      </div>
+                    </div>
+                    <div class="row">
+                      <div class="col-md-6 mb-3">
+                        <label for="tarifDateDebut">Date Début *</label>
+                        <input type="date" class="form-control" id="tarifDateDebut" required>
+                      </div>
+                      <div class="col-md-6 mb-3">
+                        <label for="tarifDateFin">Date Fin</label>
+                        <input type="date" class="form-control" id="tarifDateFin">
+                        <small class="form-text text-muted">Laisser vide pour une durée indéfinie</small>
+                      </div>
+                    </div>
+                  </form>
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuler</button>
+                  <button type="button" class="btn btn-primary" onclick="saveTarif()"><i class="fas fa-save"></i> Enregistrer</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Modal Visualisation -->
+          <div class="modal fade" id="viewTarifModal" tabindex="-1">
+            <div class="modal-dialog modal-lg">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title">Détails du Tarif</h5>
+                  <button type="button" class="close" data-dismiss="modal">&times;</button>
+                </div>
+                <div class="modal-body">
+                  <div class="row">
+                    <div class="col-md-6 mb-3"><strong>Coopérative:</strong><br><span id="viewTarifCooperative">-</span></div>
+                    <div class="col-md-6 mb-3"><strong>Trajet:</strong><br><span id="viewTarifTrajet">-</span></div>
+                  </div>
+                  <div class="row">
+                    <div class="col-md-6 mb-3"><strong>Type de Véhicule:</strong><br><span id="viewTarifVehiculeType">-</span></div>
+                    <div class="col-md-6 mb-3"><strong>Devise:</strong><br><span id="viewTarifDevise">-</span></div>
+                  </div>
+                  <div class="row">
+                    <div class="col-md-12 mb-3"><strong>Montant:</strong><br><h4 class="text-primary"><span id="viewTarifMontant">-</span></h4></div>
+                  </div>
+                  <div class="row">
+                    <div class="col-md-6 mb-3"><strong>Date Début:</strong><br><span id="viewTarifDateDebut">-</span></div>
+                    <div class="col-md-6 mb-3"><strong>Date Fin:</strong><br><span id="viewTarifDateFin">-</span></div>
+                  </div>
+                  <div class="row">
+                    <div class="col-md-12 mb-3"><strong>Statut:</strong><br><span id="viewTarifActif">-</span></div>
+                  </div>
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary" data-dismiss="modal">Fermer</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Modal Suppression -->
+          <div class="modal fade" id="deleteTarifModal" tabindex="-1">
+            <div class="modal-dialog">
+              <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                  <h5 class="modal-title">Confirmer la Suppression</h5>
+                  <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
+                </div>
+                <div class="modal-body">
+                  <p><i class="fas fa-exclamation-triangle text-warning fa-2x mb-3"></i></p>
+                  <p>Êtes-vous sûr de vouloir supprimer ce tarif?</p>
+                  <p class="text-muted">
+                    <strong id="deleteTarifCooperative"></strong> - 
+                    <strong id="deleteTarifTrajet"></strong>
+                  </p>
+                  <input type="hidden" id="deleteTarifId">
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuler</button>
+                  <button type="button" class="btn btn-danger" onclick="deleteTarif()"><i class="fas fa-trash"></i> Supprimer</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Modal Logout -->
+          <div class="modal fade" id="logoutModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabelLogout"
+            aria-hidden="true">
+            <div class="modal-dialog" role="document">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title" id="exampleModalLabelLogout">Ohh No!</h5>
+                  <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                  </button>
+                </div>
+                <div class="modal-body">
+                  <p>Are you sure you want to logout?</p>
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-outline-primary" data-dismiss="modal">Cancel</button>
+                  <a href="login.html" class="btn btn-primary">Logout</a>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+        <!---Container Fluid-->
+      </div>
+      <!-- Footer -->
+      <footer class="sticky-footer bg-white">
+        <div class="container my-auto">
+          <div class="copyright text-center my-auto">
+            <span>copyright &copy; <script> document.write(new Date().getFullYear()); </script> - Gestion Taxi Brousse</span>
+          </div>
+        </div>
+      </footer>
+      <!-- Footer -->
+    </div>
+  </div>
+
+  <!-- Scroll to top -->
+  <a class="scroll-to-top rounded" href="#page-top">
+    <i class="fas fa-angle-up"></i>
+  </a>
+
+  <script src="vendor/jquery/jquery.min.js"></script>
+  <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <script src="vendor/jquery-easing/jquery.easing.min.js"></script>
+  <script src="js/ruang-admin.min.js"></script>
+  <script src="vendor/datatables/jquery.dataTables.min.js"></script>
+  <script src="vendor/datatables/dataTables.bootstrap4.min.js"></script>
+
+  <script>
+    $(document).ready(function () {
+      $('#dataTable').DataTable();
+      loadReferenceData();
+    });
+
+    let cooperatives = [];
+    let trajets = [];
+    let vehiculeTypes = [];
+    let devises = [];
+
+    function loadReferenceData() {
+      // Charger les coopératives
+      $.get('/api/cooperatives', function(data) {
+        cooperatives = data;
+        const options = data.map(c => `<option value="${c.id}">${c.nom}</option>`).join('');
+        $('#tarifCooperativeId').append(options);
+      });
+
+      // Charger les trajets
+      $.get('/api/trajets', function(data) {
+        trajets = data;
+        const options = data.map(t => `<option value="${t.id}">${t.code} - ${t.libelle}</option>`).join('');
+        $('#tarifTrajetId').append(options);
+      });
+
+      // Charger les types de véhicules
+      $.get('/api/reference/vehicule-types', function(data) {
+        vehiculeTypes = data;
+        const options = data.map(vt => `<option value="${vt.id}">${vt.libelle}</option>`).join('');
+        $('#tarifRefVehiculeTypeId').append(options);
+      });
+
+      // Charger les devises
+      $.get('/api/reference/devises', function(data) {
+        devises = data;
+        const options = data.map(d => `<option value="${d.id}">${d.code} - ${d.libelle}</option>`).join('');
+        $('#tarifRefDeviseId').append(options);
+      });
+    }
+
+    function openTarifModal() {
+      $('#tarifId').val('');
+      $('#tarifForm')[0].reset();
+      $('#tarifModalTitle').text('Nouveau Tarif');
+      $('#tarifForm').removeClass('was-validated');
+      // Date par défaut = aujourd'hui
+      $('#tarifDateDebut').val(new Date().toISOString().split('T')[0]);
+      $('#tarifModal').modal('show');
+    }
+
+    function viewTarif(id) {
+      $.get(`/api/tarifs/${id}`, function(tarif) {
+        $('#viewTarifCooperative').text(tarif.cooperativeNom || '-');
+        $('#viewTarifTrajet').text(`${tarif.trajetCode || ''} - ${tarif.trajetLibelle || '-'}`);
+        $('#viewTarifVehiculeType').text(tarif.vehiculeTypeLibelle || '-');
+        $('#viewTarifDevise').text(tarif.deviseCode || '-');
+        $('#viewTarifMontant').text(formatMoney(tarif.montant) + ' ' + (tarif.deviseCode || ''));
+        $('#viewTarifDateDebut').text(formatDate(tarif.dateDebut) || '-');
+        $('#viewTarifDateFin').text(tarif.dateFin ? formatDate(tarif.dateFin) : 'Indéfini');
+        $('#viewTarifActif').html(tarif.actif ? '<span class="badge badge-success">Actif</span>' : '<span class="badge badge-secondary">Inactif</span>');
+        $('#viewTarifModal').modal('show');
+      });
+    }
+
+    function editTarif(id) {
+      $.get(`/api/tarifs/${id}`, function(tarif) {
+        $('#tarifId').val(tarif.id);
+        $('#tarifCooperativeId').val(tarif.cooperativeId);
+        $('#tarifTrajetId').val(tarif.trajetId);
+        $('#tarifRefVehiculeTypeId').val(tarif.refVehiculeTypeId);
+        $('#tarifRefDeviseId').val(tarif.refDeviseId);
+        $('#tarifMontant').val(tarif.montant);
+        $('#tarifDateDebut').val(tarif.dateDebut);
+        $('#tarifDateFin').val(tarif.dateFin || '');
+        $('#tarifModalTitle').text('Modifier Tarif');
+        $('#tarifForm').removeClass('was-validated');
+        $('#tarifModal').modal('show');
+      });
+    }
+
+    function saveTarif() {
+      const form = $('#tarifForm')[0];
+      if (!form.checkValidity()) {
+        form.classList.add('was-validated');
+        return;
+      }
+
+      const tarif = {
+        cooperativeId: parseInt($('#tarifCooperativeId').val()),
+        trajetId: parseInt($('#tarifTrajetId').val()),
+        refVehiculeTypeId: parseInt($('#tarifRefVehiculeTypeId').val()),
+        refDeviseId: parseInt($('#tarifRefDeviseId').val()),
+        montant: parseFloat($('#tarifMontant').val()),
+        dateDebut: $('#tarifDateDebut').val(),
+        dateFin: $('#tarifDateFin').val() || null
+      };
+
+      const id = $('#tarifId').val();
+      const url = id ? `/api/tarifs/${id}` : '/api/tarifs';
+      const method = id ? 'PUT' : 'POST';
+
+      $.ajax({
+        url: url,
+        type: method,
+        contentType: 'application/json',
+        data: JSON.stringify(tarif),
+        success: function() {
+          $('#tarifModal').modal('hide');
+          location.reload();
+        },
+        error: function(xhr) {
+          alert('Erreur: ' + (xhr.responseJSON?.message || 'Opération échouée. Vérifiez les chevauchements de dates.'));
+        }
+      });
+    }
+
+    function confirmDeleteTarif(id, cooperative, trajet) {
+      $('#deleteTarifId').val(id);
+      $('#deleteTarifCooperative').text(cooperative);
+      $('#deleteTarifTrajet').text(trajet);
+      $('#deleteTarifModal').modal('show');
+    }
+
+    function deleteTarif() {
+      const id = $('#deleteTarifId').val();
+      $.ajax({
+        url: `/api/tarifs/${id}`,
+        type: 'DELETE',
+        success: function() {
+          $('#deleteTarifModal').modal('hide');
+          location.reload();
+        },
+        error: function(xhr) {
+          alert('Erreur: ' + (xhr.responseJSON?.message || 'Suppression échouée'));
+        }
+      });
+    }
+
+    function formatMoney(amount) {
+      return new Intl.NumberFormat('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(amount);
+    }
+
+    function formatDate(dateString) {
+      if (!dateString) return '';
+      const date = new Date(dateString);
+      return date.toLocaleDateString('fr-FR');
+    }
+  </script>
+
+</body>
+
+</html>

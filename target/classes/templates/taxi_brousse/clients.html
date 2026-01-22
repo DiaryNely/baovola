@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="description" content="">
+  <meta name="author" content="">
+  <link href="img/logo/logo.png" rel="icon">
+  <title>Taxi Brousse - Clients</title>
+  <link href="vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">
+  <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet" type="text/css">
+  <link href="css/ruang-admin.min.css" rel="stylesheet">
+</head>
+
+<body id="page-top">
+  <div id="wrapper">
+    <!-- Sidebar -->
+    <div th:replace="~{taxi_brousse/fragments :: sidebar}"></div>
+    <ul class="navbar-nav sidebar sidebar-light accordion" id="accordionSidebar" style="display:none;">
+      <a class="sidebar-brand d-flex align-items-center justify-content-center" href="/">
+        <div class="sidebar-brand-icon">
+          <img src="img/logo/logo2.png">
+        </div>
+        <div class="sidebar-brand-text mx-3">Taxi Brousse</div>
+      </a>
+      <hr class="sidebar-divider my-0">
+      <li class="nav-item">
+        <a class="nav-link" href="/">
+          <i class="fas fa-fw fa-tachometer-alt"></i>
+          <span>Dashboard</span></a>
+      </li>
+      <hr class="sidebar-divider">
+      <div class="sidebar-heading">
+        Gestion
+      </div>
+      <li class="nav-item">
+        <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseGestion"
+          aria-expanded="true" aria-controls="collapseGestion">
+          <i class="fas fa-fw fa-car"></i>
+          <span>Transport</span>
+        </a>
+        <div id="collapseGestion" class="collapse" aria-labelledby="headingGestion" data-parent="#accordionSidebar">
+          <div class="bg-white py-2 collapse-inner rounded">
+            <h6 class="collapse-header">Gestion Transport</h6>
+            <a class="collapse-item" href="/cooperatives">Coopératives</a>
+            <a class="collapse-item" href="/vehicules">Véhicules</a>
+            <a class="collapse-item" href="/chauffeurs">Chauffeurs</a>
+            <a class="collapse-item" href="/trajets">Trajets</a>
+            <a class="collapse-item" href="/lieux">Lieux</a>
+          </div>
+        </div>
+      </li>
+      <li class="nav-item active">        <a class="nav-link" href="/tarifs">
+          <i class="fas fa-fw fa-dollar-sign"></i>
+          <span>Tarifs</span>
+        </a>
+      </li>
+      <li class="nav-item">        <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseReservation" aria-expanded="true"
+          aria-controls="collapseReservation">
+          <i class="fas fa-fw fa-ticket-alt"></i>
+          <span>Réservations</span>
+        </a>
+        <div id="collapseReservation" class="collapse show" aria-labelledby="headingReservation" data-parent="#accordionSidebar">
+          <div class="bg-white py-2 collapse-inner rounded">
+            <h6 class="collapse-header">Réservations</h6>
+            <a class="collapse-item active" href="/clients">Clients</a>
+            <a class="collapse-item" href="/reservations">Réservations</a>
+            <a class="collapse-item" href="/reservations-critere">Réservations avec critere</a>
+            <a class="collapse-item" href="/departs">Départs</a>
+            <a class="collapse-item" href="/billets">Billets</a>
+          </div>
+        </div>
+      </li>
+      <hr class="sidebar-divider">
+      <div class="version" id="version-ruangadmin"></div>
+    </ul>
+    <!-- Sidebar -->
+    <div id="content-wrapper" class="d-flex flex-column">
+      <div id="content">
+        <!-- TopBar -->
+        <nav class="navbar navbar-expand navbar-light bg-navbar topbar mb-4 static-top">
+          <button id="sidebarToggleTop" class="btn btn-link rounded-circle mr-3">
+            <i class="fa fa-bars"></i>
+          </button>
+          <ul class="navbar-nav ml-auto">
+            <div class="topbar-divider d-none d-sm-block"></div>
+            <li class="nav-item dropdown no-arrow">
+              <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-toggle="dropdown"
+                aria-haspopup="true" aria-expanded="false">
+                <img class="img-profile rounded-circle" src="img/boy.png" style="max-width: 60px">
+                <span class="ml-2 d-none d-lg-inline text-white small">Admin</span>
+              </a>
+              <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in" aria-labelledby="userDropdown">
+                <a class="dropdown-item" href="#">
+                  <i class="fas fa-user fa-sm fa-fw mr-2 text-gray-400"></i>
+                  Profile
+                </a>
+                <div class="dropdown-divider"></div>
+                <a class="dropdown-item" href="javascript:void(0);" data-toggle="modal" data-target="#logoutModal">
+                  <i class="fas fa-sign-out-alt fa-sm fa-fw mr-2 text-gray-400"></i>
+                  Logout
+                </a>
+              </div>
+            </li>
+          </ul>
+        </nav>
+        <!-- Topbar -->
+        <!-- Container Fluid-->
+        <div class="container-fluid" id="container-wrapper">
+          <div class="d-sm-flex align-items-center justify-content-between mb-4">
+            <h1 class="h3 mb-0 text-gray-800">Clients</h1>
+            <ol class="breadcrumb">
+              <li class="breadcrumb-item"><a href="/">Home</a></li>
+              <li class="breadcrumb-item">Réservations</li>
+              <li class="breadcrumb-item active" aria-current="page">Clients</li>
+            </ol>
+          </div>
+
+          <div class="row">
+            <div class="col-lg-12 mb-4">
+              <!-- Clients Table -->
+              <div class="card">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                  <h6 class="m-0 font-weight-bold text-primary">Liste des Clients</h6>
+                  <button class="btn btn-primary btn-sm" onclick="openClientModal()">
+                    <i class="fas fa-plus"></i> Nouveau Client
+                  </button>
+                </div>
+                <div class="table-responsive">
+                  <table class="table align-items-center table-flush table-hover">
+                    <thead class="thead-light">
+                      <tr>
+                        <th>ID</th>
+                        <th>Nom</th>
+                        <th>Prénom</th>
+                        <th>Téléphone</th>
+                        <th>Email</th>
+                        <th>N° CIN</th>
+                        <th>Date Inscription</th>
+                        <th style="width: 140px;">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr th:each="client : ${clients}">
+                        <td th:text="${client.id}">1</td>
+                        <td><strong th:text="${client.nom}">RASOAMANARIVO</strong></td>
+                        <td th:text="${client.prenom}">Marie</td>
+                        <td th:text="${client.telephone}">+261 34 00 000 00</td>
+                        <td th:text="${client.email}">marie@example.mg</td>
+                        <td th:text="${client.numeroCin}">101 234 567 890</td>
+                        <td th:text="${#temporals.format(client.createdAt, 'dd/MM/yyyy')}">09/01/2026</td>
+                        <td class="text-nowrap">
+                          <a href="#" class="btn btn-sm btn-info" title="Voir" th:attr="data-id=${client.id}" onclick="viewClient(event, this.getAttribute('data-id'))"><i class="fas fa-eye"></i></a>
+                          <a href="#" class="btn btn-sm btn-warning" title="Modifier" th:attr="data-id=${client.id}" onclick="editClient(event, this.getAttribute('data-id'))"><i class="fas fa-edit"></i></a>
+                          <a href="#" class="btn btn-sm btn-danger" title="Supprimer" th:attr="data-id=${client.id}" onclick="confirmDeleteClient(event, this.getAttribute('data-id'))"><i class="fas fa-trash"></i></a>
+                        </td>
+                      </tr>
+                      <tr th:if="${#lists.isEmpty(clients)}">
+                        <td colspan="8" class="text-center text-muted">Aucun client enregistré</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+                <div class="card-footer"></div>
+              </div>
+            </div>
+          </div>
+          <!--Row-->
+
+          <!-- Modal Création/Modification Client -->
+          <div class="modal fade" id="clientModal" tabindex="-1">
+            <div class="modal-dialog modal-lg">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title" id="clientModalTitle">Nouveau Client</h5>
+                  <button type="button" class="close" data-dismiss="modal">&times;</button>
+                </div>
+                <div class="modal-body">
+                  <form id="clientForm">
+                    <input type="hidden" id="clientId">
+                    <div class="row">
+                      <div class="col-md-6 mb-3">
+                        <label for="clientNom">Nom *</label>
+                        <input type="text" class="form-control" id="clientNom" required>
+                      </div>
+                      <div class="col-md-6 mb-3">
+                        <label for="clientPrenom">Prénom *</label>
+                        <input type="text" class="form-control" id="clientPrenom" required>
+                      </div>
+                    </div>
+                    <div class="row">
+                      <div class="col-md-6 mb-3">
+                        <label for="clientTelephone">Téléphone *</label>
+                        <input type="tel" class="form-control" id="clientTelephone" required>
+                      </div>
+                      <div class="col-md-6 mb-3">
+                        <label for="clientEmail">Email</label>
+                        <input type="email" class="form-control" id="clientEmail">
+                      </div>
+                    </div>
+                    <div class="row">
+                      <div class="col-md-6 mb-3">
+                        <label for="clientNumeroCin">N° CIN</label>
+                        <input type="text" class="form-control" id="clientNumeroCin">
+                      </div>
+                      <div class="col-md-6 mb-3">
+                        <label for="clientDateNaissance">Date Naissance</label>
+                        <input type="date" class="form-control" id="clientDateNaissance">
+                      </div>
+                    </div>
+                  </form>
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuler</button>
+                  <button type="button" class="btn btn-primary" onclick="saveClient()"><i class="fas fa-save"></i> Enregistrer</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Modal Visualisation -->
+          <div class="modal fade" id="viewClientModal" tabindex="-1">
+            <div class="modal-dialog modal-lg">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title">Détails du Client</h5>
+                  <button type="button" class="close" data-dismiss="modal">&times;</button>
+                </div>
+                <div class="modal-body">
+                  <div class="row">
+                    <div class="col-md-6 mb-3"><strong>Nom:</strong><br><span id="viewClientNom">-</span></div>
+                    <div class="col-md-6 mb-3"><strong>Prénom:</strong><br><span id="viewClientPrenom">-</span></div>
+                  </div>
+                  <div class="row">
+                    <div class="col-md-6 mb-3"><strong>Téléphone:</strong><br><span id="viewClientTelephone">-</span></div>
+                    <div class="col-md-6 mb-3"><strong>Email:</strong><br><span id="viewClientEmail">-</span></div>
+                  </div>
+                  <div class="row">
+                    <div class="col-md-6 mb-3"><strong>N° CIN:</strong><br><span id="viewClientNumeroCin">-</span></div>
+                    <div class="col-md-6 mb-3"><strong>Date Naissance:</strong><br><span id="viewClientDateNaissance">-</span></div>
+                  </div>
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary" data-dismiss="modal">Fermer</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Modal Suppression -->
+          <div class="modal fade" id="deleteClientModal" tabindex="-1">
+            <div class="modal-dialog">
+              <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                  <h5 class="modal-title">Confirmer la Suppression</h5>
+                  <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
+                </div>
+                <div class="modal-body">
+                  <p><i class="fas fa-exclamation-triangle text-warning fa-2x mb-3"></i></p>
+                  <p>Êtes-vous sûr de vouloir supprimer ce client?</p>
+                  <p class="text-muted">Nom: <strong id="deleteClientNom"></strong></p>
+                  <input type="hidden" id="deleteClientId">
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuler</button>
+                  <button type="button" class="btn btn-danger" onclick="deleteClient()"><i class="fas fa-trash"></i> Supprimer</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Modal Logout -->
+          <div class="modal fade" id="logoutModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabelLogout"
+            aria-hidden="true">
+            <div class="modal-dialog" role="document">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title" id="exampleModalLabelLogout">Confirmation</h5>
+                  <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                  </button>
+                </div>
+                <div class="modal-body">
+                  <p>Voulez-vous vraiment vous déconnecter?</p>
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-outline-primary" data-dismiss="modal">Annuler</button>
+                  <a href="/" class="btn btn-primary">Se déconnecter</a>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+        <!---Container Fluid-->
+      </div>
+      <!-- Footer -->
+      <footer class="sticky-footer bg-white">
+        <div class="container my-auto">
+          <div class="copyright text-center my-auto">
+            <span>copyright &copy; <script> document.write(new Date().getFullYear()); </script> - Gestion Taxi Brousse
+            </span>
+          </div>
+        </div>
+      </footer>
+      <!-- Footer -->
+    </div>
+  </div>
+
+  <!-- Scroll to top -->
+  <a class="scroll-to-top rounded" href="#page-top">
+    <i class="fas fa-angle-up"></i>
+  </a>
+
+  <script src="vendor/jquery/jquery.min.js"></script>
+  <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <script src="vendor/jquery-easing/jquery.easing.min.js"></script>
+  <script src="js/ruang-admin.min.js"></script>
+
+  <script>
+    function openClientModal() {
+      $('#clientModalTitle').text('Nouveau Client');
+      $('#clientId').val('');
+      $('#clientForm')[0].reset();
+      $('#clientForm').removeClass('was-validated');
+      $('#clientModal').modal('show');
+    }
+
+    function viewClient(event, id) {
+      event.preventDefault();
+      $.get('/api/clients/' + id, function(data) {
+        $('#viewClientNom').text(data.nom || '-');
+        $('#viewClientPrenom').text(data.prenom || '-');
+        $('#viewClientTelephone').text(data.telephone || '-');
+        $('#viewClientEmail').text(data.email || '-');
+        $('#viewClientNumeroCin').text(data.numeroCin || '-');
+        $('#viewClientDateNaissance').text(data.dateNaissance || '-');
+        $('#viewClientModal').modal('show');
+      }).fail(function(xhr) {
+        alert('Erreur: ' + (xhr.responseJSON?.message || 'Erreur inconnue'));
+      });
+    }
+
+    function editClient(event, id) {
+      event.preventDefault();
+      $.get('/api/clients/' + id, function(data) {
+        $('#clientModalTitle').text('Modifier le Client');
+        $('#clientId').val(data.id);
+        $('#clientNom').val(data.nom);
+        $('#clientPrenom').val(data.prenom);
+        $('#clientTelephone').val(data.telephone);
+        $('#clientEmail').val(data.email || '');
+        $('#clientNumeroCin').val(data.numeroCin || '');
+        $('#clientDateNaissance').val(data.dateNaissance || '');
+        $('#clientModal').modal('show');
+      }).fail(function(xhr) {
+        alert('Erreur: ' + (xhr.responseJSON?.message || 'Erreur inconnue'));
+      });
+    }
+
+    function saveClient() {
+      const form = $('#clientForm')[0];
+      if (!form.checkValidity()) {
+        form.classList.add('was-validated');
+        return;
+      }
+      const id = $('#clientId').val();
+      const data = {
+        nom: $('#clientNom').val(),
+        prenom: $('#clientPrenom').val(),
+        telephone: $('#clientTelephone').val(),
+        email: $('#clientEmail').val() || null,
+        numeroCin: $('#clientNumeroCin').val() || null,
+        dateNaissance: $('#clientDateNaissance').val() || null
+      };
+      $.ajax({
+        url: id ? '/api/clients/' + id : '/api/clients',
+        type: id ? 'PUT' : 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify(data),
+        success: function() {
+          $('#clientModal').modal('hide');
+          alert('Client ' + (id ? 'modifié' : 'créé') + ' avec succès!');
+          location.reload();
+        },
+        error: function(xhr) {
+          alert('Erreur: ' + (xhr.responseJSON?.message || 'Erreur inconnue'));
+        }
+      });
+    }
+
+    function confirmDeleteClient(event, id) {
+      event.preventDefault();
+      $.get('/api/clients/' + id, function(data) {
+        $('#deleteClientId').val(id);
+        $('#deleteClientNom').text(data.nom + ' ' + data.prenom);
+        $('#deleteClientModal').modal('show');
+      }).fail(function(xhr) {
+        alert('Erreur: ' + (xhr.responseJSON?.message || 'Erreur inconnue'));
+      });
+    }
+
+    function deleteClient() {
+      const id = $('#deleteClientId').val();
+      $.ajax({
+        url: '/api/clients/' + id,
+        type: 'DELETE',
+        success: function() {
+          $('#deleteClientModal').modal('hide');
+          alert('Client supprimé avec succès!');
+          location.reload();
+        },
+        error: function(xhr) {
+          alert('Erreur: ' + (xhr.responseJSON?.message || 'Erreur inconnue'));
+          $('#deleteClientModal').modal('hide');
+        }
+      });
+    }
+  </script>
+
+</body>
+
+</html>

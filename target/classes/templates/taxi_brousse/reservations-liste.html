@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="description" content="">
+  <meta name="author" content="">
+  <link href="img/logo/logo.png" rel="icon">
+  <title>Taxi Brousse - Liste des Réservations</title>
+  <link href="vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">
+  <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet" type="text/css">
+  <link href="css/ruang-admin.min.css" rel="stylesheet">
+  <link href="vendor/datatables/dataTables.bootstrap4.min.css" rel="stylesheet">
+  <style>
+    .seat-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+      gap: 10px;
+      padding: 15px;
+    }
+    .seat-btn {
+      padding: 10px;
+      border: 2px solid #ddd;
+      background: #fff;
+      border-radius: 5px;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.3s;
+    }
+    .seat-btn:hover:not(:disabled) {
+      border-color: #007bff;
+      background: #e3f2fd;
+    }
+    .seat-btn.selected {
+      background: #007bff;
+      color: white;
+      border-color: #0056b3;
+    }
+    .seat-btn.occupied {
+      background: #dc3545;
+      color: white;
+      border-color: #bd2130;
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
+  </style>
+</head>
+
+<body id="page-top">
+  <div id="wrapper">
+    <!-- Sidebar -->
+    <div th:replace="~{taxi_brousse/fragments :: sidebar}"></div>
+    <ul class="navbar-nav sidebar sidebar-light accordion" id="accordionSidebar" style="display:none;">
+      <a class="sidebar-brand d-flex align-items-center justify-content-center" href="/">
+        <div class="sidebar-brand-icon">
+          <img src="img/logo/logo2.png">
+        </div>
+        <div class="sidebar-brand-text mx-3">Taxi Brousse</div>
+      </a>
+      <hr class="sidebar-divider my-0">
+      <li class="nav-item">
+        <a class="nav-link" href="/">
+          <i class="fas fa-fw fa-tachometer-alt"></i>
+          <span>Dashboard</span></a>
+      </li>
+      <hr class="sidebar-divider">
+      <div class="sidebar-heading">
+        Gestion
+      </div>
+      <li class="nav-item">
+        <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseGestion"
+          aria-expanded="true" aria-controls="collapseGestion">
+          <i class="fas fa-fw fa-car"></i>
+          <span>Transport</span>
+        </a>
+        <div id="collapseGestion" class="collapse" aria-labelledby="headingGestion" data-parent="#accordionSidebar">
+          <div class="bg-white py-2 collapse-inner rounded">
+            <h6 class="collapse-header">Gestion Transport</h6>
+            <a class="collapse-item" href="/cooperatives">Coopératives</a>
+            <a class="collapse-item" href="/vehicules">Véhicules</a>
+            <a class="collapse-item" href="/chauffeurs">Chauffeurs</a>
+            <a class="collapse-item" href="/trajets">Trajets</a>
+            <a class="collapse-item" href="/lieux">Lieux</a>
+          </div>
+        </div>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="/tarifs">
+          <i class="fas fa-fw fa-dollar-sign"></i>
+          <span>Tarifs</span>
+        </a>
+      </li>
+      <li class="nav-item active">
+        <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseReservation" aria-expanded="true"
+          aria-controls="collapseReservation">
+          <i class="fas fa-fw fa-ticket-alt"></i>
+          <span>Réservations</span>
+        </a>
+        <div id="collapseReservation" class="collapse show" aria-labelledby="headingReservation" data-parent="#accordionSidebar">
+          <div class="bg-white py-2 collapse-inner rounded">
+            <h6 class="collapse-header">Réservations</h6>
+            <a class="collapse-item" href="/clients">Clients</a>
+            <a class="collapse-item" href="/reservations">Départs Disponibles</a>
+            <a class="collapse-item active" href="/reservations-liste">Liste Réservations</a>
+            <a class="collapse-item" href="/reservations-critere">Réservations avec critere</a>
+            <a class="collapse-item" href="/departs">Départs</a>
+            <a class="collapse-item" href="/billets">Billets</a>
+          </div>
+        </div>
+      </li>
+      <hr class="sidebar-divider">
+      <div class="version" id="version-ruangadmin"></div>
+    </ul>
+    <!-- Sidebar -->
+    <div id="content-wrapper" class="d-flex flex-column">
+      <div id="content">
+        <!-- TopBar -->
+        <nav class="navbar navbar-expand navbar-light bg-navbar topbar mb-4 static-top">
+          <button id="sidebarToggleTop" class="btn btn-link rounded-circle mr-3">
+            <i class="fa fa-bars"></i>
+          </button>
+          <ul class="navbar-nav ml-auto">
+            <div class="topbar-divider d-none d-sm-block"></div>
+            <li class="nav-item dropdown no-arrow">
+              <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-toggle="dropdown"
+                aria-haspopup="true" aria-expanded="false">
+                <img class="img-profile rounded-circle" src="img/boy.png" style="max-width: 60px">
+                <span class="ml-2 d-none d-lg-inline text-white small">Admin</span>
+              </a>
+              <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in" aria-labelledby="userDropdown">
+                <a class="dropdown-item" href="#">
+                  <i class="fas fa-user fa-sm fa-fw mr-2 text-gray-400"></i>
+                  Profile
+                </a>
+                <div class="dropdown-divider"></div>
+                <a class="dropdown-item" href="javascript:void(0);" data-toggle="modal" data-target="#logoutModal">
+                  <i class="fas fa-sign-out-alt fa-sm fa-fw mr-2 text-gray-400"></i>
+                  Logout
+                </a>
+              </div>
+            </li>
+          </ul>
+        </nav>
+        <!-- Topbar -->
+        <!-- Container Fluid-->
+        <div class="container-fluid" id="container-wrapper">
+          <div class="d-sm-flex align-items-center justify-content-between mb-4">
+            <h1 class="h3 mb-0 text-gray-800">
+              <i class="fas fa-list"></i> Liste des Réservations
+            </h1>
+            <ol class="breadcrumb">
+              <li class="breadcrumb-item"><a href="/">Home</a></li>
+              <li class="breadcrumb-item">Réservations</li>
+              <li class="breadcrumb-item active" aria-current="page">Liste</li>
+            </ol>
+          </div>
+
+          <div class="row">
+            <div class="col-lg-12 mb-4">
+              <!-- Réservations Table -->
+              <div class="card">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                  <h6 class="m-0 font-weight-bold text-primary">Toutes les Réservations</h6>
+                  <a href="/reservations" class="btn btn-primary btn-sm">
+                    <i class="fas fa-calendar-alt"></i> Voir le Calendrier
+                  </a>
+                </div>
+                <div class="table-responsive p-3">
+                  <table class="table align-items-center table-flush table-hover" id="dataTableReservations">
+                    <thead class="thead-light">
+                      <tr>
+                        <th>ID</th>
+                        <th>Code</th>
+                        <th>Client</th>
+                        <th>Départ</th>
+                        <th>Trajet</th>
+                        <th>Date Départ</th>
+                        <th>Date Création</th>
+                        <th>Statut</th>
+                        <th>Notes</th>
+                        <th style="width: 140px;">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr th:each="reservation : ${reservations}">
+                        <td th:text="${reservation.id}">1</td>
+                        <td><strong th:text="${reservation.code}">RES001</strong></td>
+                        <td th:text="${reservation.client != null ? reservation.client.nom + ' ' + (reservation.client.prenom != null ? reservation.client.prenom : '') : 'N/A'}">
+                          RAKOTO Jean
+                        </td>
+                        <td th:text="${reservation.depart != null ? reservation.depart.code : 'N/A'}">DEP001</td>
+                        <td th:text="${reservation.depart != null && reservation.depart.trajet != null ? reservation.depart.trajet.libelle : 'N/A'}">
+                          Antananarivo - Toamasina
+                        </td>
+                        <td th:text="${reservation.depart != null ? #temporals.format(reservation.depart.dateHeureDepart, 'dd/MM/yyyy HH:mm') : 'N/A'}">
+                          15/01/2026 08:00
+                        </td>
+                        <td th:text="${#temporals.format(reservation.dateCreation, 'dd/MM/yyyy HH:mm')}">09/01/2026 10:30</td>
+                        <td>
+                          <span class="badge" 
+                                th:if="${reservation.refReservationStatut != null}"
+                                th:classappend="${reservation.refReservationStatut.code == 'CONFIRME' ? 'badge-success' : 
+                                                (reservation.refReservationStatut.code == 'EN_ATTENTE' ? 'badge-warning' : 
+                                                (reservation.refReservationStatut.code == 'ANNULE' ? 'badge-danger' : 'badge-info'))}"
+                                th:text="${reservation.refReservationStatut.libelle}">Confirmé</span>
+                        </td>
+                        <td th:text="${reservation.notes != null ? (reservation.notes.length() > 30 ? reservation.notes.substring(0, 30) + '...' : reservation.notes) : '-'}">
+                          Notes...
+                        </td>
+                        <td class="text-nowrap">
+                          <a href="#" class="btn btn-sm btn-info" title="Voir" 
+                             th:onclick="|viewReservation(${reservation.id})|">
+                            <i class="fas fa-eye"></i>
+                          </a>
+                          <a href="#" class="btn btn-sm btn-warning" title="Modifier"
+                             th:onclick="|editReservation(${reservation.id})|">
+                            <i class="fas fa-edit"></i>
+                          </a>
+                          <a href="#" class="btn btn-sm btn-danger" title="Annuler"
+                             th:onclick="|cancelReservation(${reservation.id})|">
+                            <i class="fas fa-times"></i>
+                          </a>
+                        </td>
+                      </tr>
+                      <tr th:if="${#lists.isEmpty(reservations)}">
+                        <td colspan="10" class="text-center text-muted">Aucune réservation enregistrée</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+                <div class="card-footer"></div>
+              </div>
+            </div>
+          </div>
+          <!--Row-->
+
+          <!-- Modal Détails Réservation -->
+          <div class="modal fade" id="detailsModal" tabindex="-1" role="dialog" aria-labelledby="detailsModalLabel"
+            aria-hidden="true">
+            <div class="modal-dialog modal-lg" role="document">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title" id="detailsModalLabel">Détails de la Réservation</h5>
+                  <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                  </button>
+                </div>
+                <div class="modal-body">
+                  <div id="detailsContent">
+                    <div class="text-center">
+                      <div class="spinner-border" role="status">
+                        <span class="sr-only">Chargement...</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary" data-dismiss="modal">Fermer</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Modal Modifier Réservation -->
+          <div class="modal fade" id="editModal" tabindex="-1" role="dialog" aria-labelledby="editModalLabel"
+            aria-hidden="true">
+            <div class="modal-dialog modal-xl" role="document">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title" id="editModalLabel">Modifier la Réservation</h5>
+                  <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                  </button>
+                </div>
+                <form id="editReservationForm">
+                  <div class="modal-body">
+                    <input type="hidden" id="editReservationId">
+                    
+                    <div class="alert alert-info" id="editDepartInfo"></div>
+                    
+                    <div class="row">
+                      <div class="col-md-6">
+                        <div class="form-group">
+                          <label>Client *</label>
+                          <select class="form-control" id="editClientId">
+                            <option value="">Sélectionnez un client</option>
+                          </select>
+                        </div>
+                      </div>
+                      <div class="col-md-6">
+                        <div class="form-group">
+                          <label>Notes</label>
+                          <textarea class="form-control" id="editNotes" rows="2"></textarea>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <hr>
+                    <h6 class="mb-3">Sélection des Places</h6>
+                    <div class="alert alert-warning">
+                      <i class="fas fa-info-circle"></i> Cliquez sur les sièges pour sélectionner/désélectionner les places.
+                    </div>
+                    <div id="editSeatInfo" class="mb-3">
+                      <span class="badge badge-success mr-2">
+                        <i class="fas fa-circle"></i> Disponible
+                      </span>
+                      <span class="badge badge-danger mr-2">
+                        <i class="fas fa-circle"></i> Occupé
+                      </span>
+                      <span class="badge badge-primary mr-2">
+                        <i class="fas fa-circle"></i> Sélectionné
+                      </span>
+                    </div>
+                    <div id="editSeatsGrid" class="seat-grid"></div>
+                    
+                    <div id="editPassagersInfo" class="mt-4" style="display:none;">
+                      <h6>Informations des Passagers</h6>
+                      <div id="editPassagersContainer"></div>
+                    </div>
+                  </div>
+                  <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-primary">Enregistrer les modifications</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+
+          <!-- Modal Logout -->
+          <div class="modal fade" id="logoutModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabelLogout"
+            aria-hidden="true">
+            <div class="modal-dialog" role="document">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title" id="exampleModalLabelLogout">Confirmation</h5>
+                  <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                  </button>
+                </div>
+                <div class="modal-body">
+                  <p>Voulez-vous vraiment vous déconnecter?</p>
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-outline-primary" data-dismiss="modal">Annuler</button>
+                  <a href="/" class="btn btn-primary">Se déconnecter</a>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+        <!---Container Fluid-->
+      </div>
+      <!-- Footer -->
+      <footer class="sticky-footer bg-white">
+        <div class="container my-auto">
+          <div class="copyright text-center my-auto">
+            <span>copyright &copy; <script> document.write(new Date().getFullYear()); </script> - Gestion Taxi Brousse
+            </span>
+          </div>
+        </div>
+      </footer>
+      <!-- Footer -->
+    </div>
+  </div>
+
+  <!-- Scroll to top -->
+  <a class="scroll-to-top rounded" href="#page-top">
+    <i class="fas fa-angle-up"></i>
+  </a>
+
+  <script src="vendor/jquery/jquery.min.js"></script>
+  <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <script src="vendor/jquery-easing/jquery.easing.min.js"></script>
+  <script src="js/ruang-admin.min.js"></script>
+  <script src="vendor/datatables/jquery.dataTables.min.js"></script>
+  <script src="vendor/datatables/dataTables.bootstrap4.min.js"></script>
+
+  <script th:inline="none">
+    $(document).ready(function() {
+      $('#dataTableReservations').DataTable({
+        language: {
+          url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/fr-FR.json'
+        },
+        order: [[0, 'desc']]
+      });
+    });
+
+    function viewReservation(id) {
+      $('#detailsModal').modal('show');
+      $('#detailsContent').html(`
+        <div class="text-center">
+          <div class="spinner-border" role="status">
+            <span class="sr-only">Chargement...</span>
+          </div>
+        </div>
+      `);
+      
+      $.get('/api/reservations/' + id, function(reservation) {
+        const dateDepart = new Date(reservation.dateHeureDepart).toLocaleString('fr-FR');
+        const passagersList = reservation.passagers && reservation.passagers.length > 0
+          ? reservation.passagers.map(p => `<li>Siège ${p.numeroSiege}: ${p.nom} ${p.prenom || ''}</li>`).join('')
+          : '<li class="text-muted">Aucun passager</li>';
+        
+        let paiementBadge = 'secondary';
+        let paiementText = 'Non défini';
+        if (reservation.paiementStatutLibelle) {
+          if (reservation.paiementStatutLibelle === 'PAYE') {
+            paiementBadge = 'success';
+            paiementText = 'Payé';
+          } else if (reservation.paiementStatutLibelle === 'PARTIEL') {
+            paiementBadge = 'warning';
+            paiementText = 'Partiellement payé';
+          } else if (reservation.paiementStatutLibelle === 'NON_PAYE') {
+            paiementBadge = 'danger';
+            paiementText = 'Non payé';
+          }
+        }
+        
+        const paiementInfo = `<span class="badge badge-${paiementBadge}">${paiementText}</span>`;
+        
+        $('#detailsContent').html(`
+          <div class="row">
+            <div class="col-md-6">
+              <p><strong>Code:</strong> ${reservation.code}</p>
+              <p><strong>Client:</strong> ${reservation.clientNom} ${reservation.clientPrenom || ''}</p>
+              <p><strong>Statut:</strong> <span class="badge badge-info">${reservation.refReservationStatutLibelle || 'N/A'}</span></p>
+              <p><strong>Paiement:</strong> ${paiementInfo}</p>
+            </div>
+            <div class="col-md-6">
+              <p><strong>Trajet:</strong> ${reservation.lieuDepartNom || 'N/A'} → ${reservation.lieuArriveeNom || 'N/A'}</p>
+              <p><strong>Date de départ:</strong> ${dateDepart}</p>
+              <p><strong>Coopérative:</strong> ${reservation.cooperativeNom || 'N/A'}</p>
+              <p><strong>Véhicule:</strong> ${reservation.vehiculeImmatriculation || 'N/A'}</p>
+            </div>
+          </div>
+          <hr>
+          <h6>Passagers:</h6>
+          <ul>${passagersList}</ul>
+          ${reservation.notes ? `<hr><p><strong>Notes:</strong> ${reservation.notes}</p>` : ''}
+        `);
+      }).fail(function(xhr) {
+        $('#detailsContent').html(`
+          <div class="alert alert-danger">
+            <i class="fas fa-exclamation-triangle"></i> 
+            Erreur lors du chargement des détails: ${xhr.responseJSON ? xhr.responseJSON.message : 'Erreur inconnue'}
+          </div>
+        `);
+      });
+    }
+
+    function editReservation(id) {
+      let currentReservation = null;
+      let editSelectedSeats = [];
+      
+      $.get('/api/reservations/' + id, function(reservation) {
+        currentReservation = reservation;
+        $('#editReservationId').val(id);
+        
+        // Afficher les infos du départ
+        const dateDepart = new Date(reservation.dateHeureDepart).toLocaleString('fr-FR');
+        $('#editDepartInfo').html(`
+          <strong>Départ:</strong> ${reservation.lieuDepartNom || 'N/A'} → ${reservation.lieuArriveeNom || 'N/A'}<br>
+          <strong>Date:</strong> ${dateDepart}<br>
+          <strong>Véhicule:</strong> ${reservation.vehiculeImmatriculation || 'N/A'}
+        `);
+        
+        // Charger les clients
+        $.get('/api/clients', function(clients) {
+          $('#editClientId').html('<option value="">Sélectionnez un client</option>');
+          clients.forEach(client => {
+            const selected = client.id === reservation.clientId ? 'selected' : '';
+            $('#editClientId').append(`<option value="${client.id}" ${selected}>${client.nom} ${client.prenom || ''}</option>`);
+          });
+        });
+        
+        // Pré-remplir les notes
+        $('#editNotes').val(reservation.notes || '');
+        
+        // Charger les places disponibles
+        $.get(`/api/reservations/depart/${reservation.departId}/places-disponibles`, function(placesDisponibles) {
+          $.get(`/api/departs/${reservation.departId}`, function(depart) {
+            const capacite = depart.nombrePlaces;
+            
+            // Ajouter les sièges actuels de la réservation aux places disponibles
+            const siegesActuels = reservation.passagers.map(p => p.numeroSiege);
+            const toutesPlacesDisponibles = [...new Set([...placesDisponibles, ...siegesActuels])].sort((a, b) => a - b);
+            
+            renderEditSeats(capacite, toutesPlacesDisponibles, siegesActuels);
+            editSelectedSeats = [...siegesActuels];
+            updateEditPassagersForm(reservation.passagers);
+          });
+        });
+        
+        $('#editModal').modal('show');
+      }).fail(function(xhr) {
+        alert('Erreur lors du chargement de la réservation: ' + (xhr.responseJSON ? xhr.responseJSON.message : 'Erreur inconnue'));
+      });
+      
+      function renderEditSeats(totalSeats, availableSeats, selectedSeats) {
+        const grid = $('#editSeatsGrid');
+        grid.empty();
+        
+        for (let i = 1; i <= totalSeats; i++) {
+          const isAvailable = availableSeats.includes(i);
+          const isSelected = selectedSeats.includes(i);
+          let className = 'seat-btn';
+          if (!isAvailable) className += ' occupied';
+          if (isSelected) className += ' selected';
+          const disabled = !isAvailable ? 'disabled' : '';
+          
+          const btn = $(`
+            <button type="button" class="${className}" ${disabled} data-seat="${i}">
+              <i class="fas fa-chair"></i><br>Siège ${i}
+            </button>
+          `);
+          
+          if (isAvailable) {
+            btn.on('click', function() {
+              toggleEditSeat(i, $(this));
+            });
+          }
+          
+          grid.append(btn);
+        }
+      }
+      
+      function toggleEditSeat(seatNumber, btn) {
+        const index = editSelectedSeats.indexOf(seatNumber);
+        
+        if (index > -1) {
+          editSelectedSeats.splice(index, 1);
+          btn.removeClass('selected');
+        } else {
+          editSelectedSeats.push(seatNumber);
+          btn.addClass('selected');
+        }
+        
+        if (editSelectedSeats.length > 0) {
+          const existingPassagers = currentReservation.passagers;
+          updateEditPassagersForm(existingPassagers);
+        } else {
+          $('#editPassagersInfo').hide();
+        }
+      }
+      
+      function updateEditPassagersForm(existingPassagers) {
+        const container = $('#editPassagersContainer');
+        container.empty();
+        $('#editPassagersInfo').show();
+        
+        editSelectedSeats.sort((a, b) => a - b).forEach(seat => {
+          const existingPassager = existingPassagers.find(p => p.numeroSiege === seat);
+          const nom = existingPassager ? existingPassager.nom : '';
+          const prenom = existingPassager ? existingPassager.prenom || '' : '';
+          
+          container.append(`
+            <div class="card mb-2">
+              <div class="card-body">
+                <h6>Passager - Siège ${seat}</h6>
+                <div class="form-row">
+                  <div class="form-group col-md-6">
+                    <label>Nom *</label>
+                    <input type="text" class="form-control edit-passager-nom" data-seat="${seat}" value="${nom}" required>
+                  </div>
+                  <div class="form-group col-md-6">
+                    <label>Prénom</label>
+                    <input type="text" class="form-control edit-passager-prenom" data-seat="${seat}" value="${prenom}">
+                  </div>
+                </div>
+              </div>
+            </div>
+          `);
+        });
+      }
+      
+      $('#editReservationForm').off('submit').on('submit', function(e) {
+        e.preventDefault();
+        
+        const clientId = $('#editClientId').val();
+        if (!clientId) {
+          alert('Veuillez sélectionner un client');
+          return;
+        }
+        
+        if (editSelectedSeats.length === 0) {
+          alert('Veuillez sélectionner au moins un siège');
+          return;
+        }
+        
+        const passagers = [];
+        let valid = true;
+        
+        editSelectedSeats.forEach(seat => {
+          const nom = $(`.edit-passager-nom[data-seat="${seat}"]`).val().trim();
+          const prenom = $(`.edit-passager-prenom[data-seat="${seat}"]`).val().trim();
+          
+          if (!nom) {
+            valid = false;
+            alert('Veuillez remplir le nom de tous les passagers');
+            return false;
+          }
+          
+          passagers.push({
+            nom: nom,
+            prenom: prenom || null,
+            numeroSiege: seat
+          });
+        });
+        
+        if (!valid) return;
+        
+        const data = {
+          clientId: parseInt(clientId),
+          departId: currentReservation.departId,
+          notes: $('#editNotes').val() || null,
+          passagers: passagers,
+          modePaiement: 'COMPTOIR'
+        };
+        
+        $.ajax({
+          url: '/api/reservations/' + id,
+          method: 'PUT',
+          contentType: 'application/json',
+          data: JSON.stringify(data),
+          success: function(response) {
+            alert('Réservation modifiée avec succès!');
+            $('#editModal').modal('hide');
+            location.reload();
+          },
+          error: function(xhr) {
+            const error = xhr.responseJSON ? xhr.responseJSON.message : 'Erreur lors de la modification';
+            alert(error);
+          }
+        });
+      });
+    }
+
+    function cancelReservation(id) {
+      if (confirm('Voulez-vous vraiment annuler cette réservation ?')) {
+        $.ajax({
+          url: '/api/reservations/' + id + '/annuler',
+          method: 'PUT',
+          success: function(response) {
+            alert('Réservation annulée avec succès!');
+            location.reload();
+          },
+          error: function(xhr) {
+            alert('Erreur lors de l\'annulation: ' + (xhr.responseJSON ? xhr.responseJSON.message : 'Erreur inconnue'));
+          }
+        });
+      }
+    }
+  </script>
+
+</body>
+
+</html>

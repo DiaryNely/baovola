@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Diffusions Publicitaires - Gestion Taxi Brousse</title>
+    <link href="vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">
+    <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet" type="text/css">
+    <link href="css/ruang-admin.min.css" rel="stylesheet">
+    <link href="vendor/datatables/dataTables.bootstrap4.min.css" rel="stylesheet">
+</head>
+
+<body id="page-top">
+    <div id="wrapper">
+        <!-- Sidebar -->
+        <div th:replace="~{taxi_brousse/fragments :: sidebar}"></div>
+        
+        <!-- Content Wrapper -->
+        <div id="content-wrapper" class="d-flex flex-column">
+            <div id="content">
+                <!-- TopBar -->
+                <div th:replace="~{taxi_brousse/fragments :: topbar}"></div>
+                
+                <!-- Container Fluid-->
+                <div class="container-fluid" id="container-wrapper">
+                    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+                        <h1 class="h3 mb-0 text-gray-800">Diffusions Publicitaires</h1>
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item"><a href="/">Accueil</a></li>
+                            <li class="breadcrumb-item">Publicité</li>
+                            <li class="breadcrumb-item active" aria-current="page">Diffusions</li>
+                        </ol>
+                    </div>
+
+                    <!-- Sélection du départ -->
+                    <div class="row mb-3">
+                        <div class="col-lg-12">
+                            <div class="card mb-4">
+                                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                                    <h6 class="m-0 font-weight-bold text-primary">Sélectionner un départ</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="form-group">
+                                        <label for="departSelect">Départ</label>
+                                        <select class="form-control" id="departSelect">
+                                            <option value="">-- Sélectionnez un départ --</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Informations du départ sélectionné -->
+                    <div class="row" id="departInfoRow" style="display: none;">
+                        <div class="col-lg-8">
+                            <div class="card mb-4">
+                                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                                    <h6 class="m-0 font-weight-bold text-primary">Informations du départ</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <p><strong>Code:</strong> <span id="departCode"></span></p>
+                                            <p><strong>Trajet:</strong> <span id="departTrajet"></span></p>
+                                            <p><strong>Date/Heure:</strong> <span id="departDateHeure"></span></p>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <p><strong>Véhicule:</strong> <span id="departVehicule"></span></p>
+                                            <p><strong>Statut:</strong> <span id="departStatut"></span></p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-4">
+                            <div class="card mb-4 bg-primary text-white">
+                                <div class="card-body">
+                                    <h5 class="card-title">Statistiques</h5>
+                                    <p class="h3" id="statsNombreDiffusions">0</p>
+                                    <p>diffusions programmées</p>
+                                    <p class="h4" id="statsMontantTotal">0 Ar</p>
+                                    <p>montant total</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Liste des diffusions -->
+                    <div class="row" id="diffusionsRow" style="display: none;">
+                        <div class="col-lg-12">
+                            <div class="card mb-4">
+                                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                                    <h6 class="m-0 font-weight-bold text-primary">Publicités diffusées</h6>
+                                    <button type="button" class="btn btn-primary btn-sm" onclick="showAddDiffusionModal()">
+                                        <i class="fas fa-plus"></i> Ajouter une publicité
+                                    </button>
+                                </div>
+                                <div class="card-body">
+                                    <div class="table-responsive">
+                                        <table class="table table-bordered table-hover" id="diffusionsTable" width="100%" cellspacing="0">
+                                            <thead>
+                                                <tr>
+                                                    <th>Publicité</th>
+                                                    <th>Société</th>
+                                                    <th>Date diffusion</th>
+                                                    <th>Répétitions</th>
+                                                    <th>Montant</th>
+                                                    <th>Statut</th>
+                                                    <th>Actions</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody></tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+                <!-- Container Fluid-->
+            </div>
+            
+            <!-- Footer -->
+            <div th:replace="~{taxi_brousse/fragments :: footer}"></div>
+        </div>
+    </div>
+
+    <!-- Modal Ajouter Diffusion -->
+    <div class="modal fade" id="addDiffusionModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Ajouter une publicité au départ</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="addDiffusionForm">
+                        <div class="form-group">
+                            <label for="publiciteSelect">Publicité *</label>
+                            <select class="form-control" id="publiciteSelect" required>
+                                <option value="">-- Sélectionnez une publicité --</option>
+                            </select>
+                            <small class="form-text text-muted">Seules les publicités valides à la date du départ sont affichées</small>
+                        </div>
+                        <div class="form-group">
+                            <label for="dateDiffusion">Date de diffusion</label>
+                            <input type="datetime-local" class="form-control" id="dateDiffusion">
+                            <small class="form-text text-muted">Par défaut : date/heure du départ</small>
+                        </div>
+                        <div class="form-group">
+                            <label for="nombreRepetitions">Nombre de répétitions durant le voyage *</label>
+                            <input type="number" class="form-control" id="nombreRepetitions" min="1" value="1" required>
+                            <small class="form-text text-muted">Nombre de fois que la publicité sera diffusée pendant le trajet</small>
+                        </div>
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i>
+                            Le montant sera calculé automatiquement : <strong>Tarif unitaire × Nombre de répétitions</strong><br>
+                            <small>Tarif en vigueur à la date du départ</small>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuler</button>
+                    <button type="button" class="btn btn-primary" onclick="saveDiffusion()">
+                        <i class="fas fa-save"></i> Enregistrer
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Confirmer Suppression -->
+    <div class="modal fade" id="deleteDiffusionModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Confirmer la suppression</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p>Êtes-vous sûr de vouloir supprimer cette diffusion ?</p>
+                    <p><strong>Publicité :</strong> <span id="deletePubliciteTitre"></span></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuler</button>
+                    <button type="button" class="btn btn-danger" onclick="confirmDelete()">
+                        <i class="fas fa-trash"></i> Supprimer
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Logout Modal-->
+    <div th:replace="~{taxi_brousse/fragments :: logoutModal}"></div>
+
+    <!-- Scripts -->
+    <script src="vendor/jquery/jquery.min.js"></script>
+    <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="vendor/jquery-easing/jquery.easing.min.js"></script>
+    <script src="js/ruang-admin.min.js"></script>
+    <script src="vendor/datatables/jquery.dataTables.min.js"></script>
+    <script src="vendor/datatables/dataTables.bootstrap4.min.js"></script>
+
+    <script th:inline="none">
+        let selectedDepartId = null;
+        let diffusionIdToDelete = null;
+        let dataTable = null;
+
+        $(document).ready(function() {
+            loadDeparts();
+        });
+
+        // Charger la liste des départs
+        function loadDeparts() {
+            $.ajax({
+                url: '/api/departs',
+                method: 'GET',
+                success: function(departs) {
+                    const select = $('#departSelect');
+                    select.empty().append('<option value="">-- Sélectionnez un départ --</option>');
+                    
+                    departs.forEach(depart => {
+                        const option = $('<option>')
+                            .val(depart.id)
+                            .text(`${depart.code} - ${depart.trajetDescription} - ${formatDateTime(depart.dateHeureDepart)}`);
+                        select.append(option);
+                    });
+                },
+                error: function(xhr) {
+                    showError('Erreur lors du chargement des départs');
+                }
+            });
+        }
+
+        // Sélection d'un départ
+        $('#departSelect').change(function() {
+            selectedDepartId = $(this).val();
+            if (selectedDepartId) {
+                loadDepartInfo(selectedDepartId);
+                loadDiffusions(selectedDepartId);
+                loadStats(selectedDepartId);
+            } else {
+                $('#departInfoRow').hide();
+                $('#diffusionsRow').hide();
+            }
+        });
+
+        // Charger les informations du départ
+        function loadDepartInfo(departId) {
+            $.ajax({
+                url: `/api/departs/${departId}`,
+                method: 'GET',
+                success: function(depart) {
+                    $('#departCode').text(depart.code);
+                    $('#departTrajet').text(depart.trajetDescription);
+                    $('#departDateHeure').text(formatDateTime(depart.dateHeureDepart));
+                    $('#departVehicule').text(depart.vehiculeImmatriculation);
+                    $('#departStatut').html(getStatutBadge(depart.refDepartStatutCode));
+                    $('#departInfoRow').show();
+                },
+                error: function(xhr) {
+                    showError('Erreur lors du chargement des informations du départ');
+                }
+            });
+        }
+
+        // Charger les diffusions d'un départ
+        function loadDiffusions(departId) {
+            $.ajax({
+                url: `/api/depart-publicites/depart/${departId}`,
+                method: 'GET',
+                success: function(diffusions) {
+                    displayDiffusions(diffusions);
+                    $('#diffusionsRow').show();
+                },
+                error: function(xhr) {
+                    showError('Erreur lors du chargement des diffusions');
+                }
+            });
+        }
+
+        // Afficher les diffusions dans le tableau
+        function displayDiffusions(diffusions) {
+            if (dataTable) {
+                dataTable.destroy();
+            }
+
+            const tbody = $('#diffusionsTable tbody');
+            tbody.empty();
+
+            diffusions.forEach(diffusion => {
+                const row = $('<tr>');
+                row.append($('<td>').text(diffusion.publiciteTitre));
+                row.append($('<td>').text(diffusion.societePublicitaireNom));
+                row.append($('<td>').text(formatDateTime(diffusion.dateDiffusion)));
+                row.append($('<td>').html('<span class="badge badge-info">' + (diffusion.nombreRepetitions || 1) + ' fois</span>'));
+                row.append($('<td>').text(formatMontant(diffusion.montantFacture, diffusion.deviseSymbole)));
+                row.append($('<td>').html(getStatutDiffusionBadge(diffusion.statutDiffusion)));
+                
+                const actions = $('<td>');
+                const deleteBtn = $('<button>')
+                    .addClass('btn btn-danger btn-sm')
+                    .html('<i class="fas fa-trash"></i>')
+                    .attr('title', 'Supprimer')
+                    .click(() => showDeleteModal(diffusion));
+                
+                if (diffusion.statutDiffusion === 'DIFFUSE') {
+                    deleteBtn.prop('disabled', true);
+                }
+                
+                actions.append(deleteBtn);
+                row.append(actions);
+                tbody.append(row);
+            });
+
+            dataTable = $('#diffusionsTable').DataTable({
+                language: {
+                    url: 'https://cdn.datatables.net/plug-ins/1.13.7/i18n/fr-FR.json'
+                },
+                order: [[3, 'desc']]
+            });
+        }
+
+        // Charger les statistiques
+        function loadStats(departId) {
+            $.ajax({
+                url: `/api/depart-publicites/depart/${departId}/stats`,
+                method: 'GET',
+                success: function(stats) {
+                    console.log('Statistiques reçues:', stats);
+                    console.log('montantTotal:', stats.montantTotal);
+                    console.log('deviseSymbole:', stats.deviseSymbole);
+                    
+                    const montantFormate = formatMontant(stats.montantTotal, stats.deviseSymbole);
+                    console.log('Montant formaté:', montantFormate);
+                    
+                    $('#statsNombreDiffusions').text(stats.nombreDiffusions);
+                    $('#statsMontantTotal').text(montantFormate);
+                    
+                    console.log('Contenu de #statsMontantTotal:', $('#statsMontantTotal').text());
+                },
+                error: function(xhr) {
+                    console.error('Erreur lors du chargement des statistiques:', xhr);
+                }
+            });
+        }
+
+        // Afficher le modal d'ajout
+        function showAddDiffusionModal() {
+            if (!selectedDepartId) {
+                showError('Veuillez sélectionner un départ');
+                return;
+            }
+
+            // Charger les publicités disponibles
+            $.ajax({
+                url: '/api/publicites/actives',
+                method: 'GET',
+                success: function(publicites) {
+                    const select = $('#publiciteSelect');
+                    select.empty().append('<option value="">-- Sélectionnez une publicité --</option>');
+                    
+                    publicites.forEach(pub => {
+                        const option = $('<option>')
+                            .val(pub.id)
+                            .text(`${pub.titre} (${pub.societePublicitaireNom})`);
+                        select.append(option);
+                    });
+                    
+                    $('#addDiffusionForm')[0].reset();
+                    $('#addDiffusionModal').modal('show');
+                },
+                error: function(xhr) {
+                    showError('Erreur lors du chargement des publicités');
+                }
+            });
+        }
+
+        // Enregistrer une diffusion
+        function saveDiffusion() {
+            const publiciteId = $('#publiciteSelect').val();
+            const dateDiffusion = $('#dateDiffusion').val();
+            const nombreRepetitions = parseInt($('#nombreRepetitions').val()) || 1;
+
+            if (!publiciteId) {
+                showError('Veuillez sélectionner une publicité');
+                return;
+            }
+
+            if (nombreRepetitions < 1) {
+                showError('Le nombre de répétitions doit être au moins 1');
+                return;
+            }
+
+            const data = {
+                departId: selectedDepartId,
+                publiciteId: publiciteId,
+                dateDiffusion: dateDiffusion || null,
+                nombreRepetitions: nombreRepetitions
+            };
+
+            console.log('Données envoyées:', data);
+
+            $.ajax({
+                url: '/api/depart-publicites',
+                method: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(data),
+                success: function(response) {
+                    $('#addDiffusionModal').modal('hide');
+                    showSuccess('Diffusion ajoutée avec succès');
+                    loadDiffusions(selectedDepartId);
+                    loadStats(selectedDepartId);
+                },
+                error: function(xhr) {
+                    console.error('Erreur détaillée:', xhr.responseJSON);
+                    const error = xhr.responseJSON?.message || 'Erreur lors de l\'ajout de la diffusion';
+                    showError(error);
+                }
+            });
+        }
+
+        // Afficher le modal de suppression
+        function showDeleteModal(diffusion) {
+            diffusionIdToDelete = diffusion.id;
+            $('#deletePubliciteTitre').text(diffusion.publiciteTitre);
+            $('#deleteDiffusionModal').modal('show');
+        }
+
+        // Confirmer la suppression
+        function confirmDelete() {
+            $.ajax({
+                url: `/api/depart-publicites/${diffusionIdToDelete}`,
+                method: 'DELETE',
+                success: function() {
+                    $('#deleteDiffusionModal').modal('hide');
+                    showSuccess('Diffusion supprimée avec succès');
+                    loadDiffusions(selectedDepartId);
+                    loadStats(selectedDepartId);
+                },
+                error: function(xhr) {
+                    const error = xhr.responseJSON?.message || 'Erreur lors de la suppression';
+                    showError(error);
+                }
+            });
+        }
+
+        // Fonctions utilitaires
+        function formatDateTime(dateTime) {
+            if (!dateTime) return '-';
+            const date = new Date(dateTime);
+            return date.toLocaleDateString('fr-FR') + ' ' + date.toLocaleTimeString('fr-FR', {hour: '2-digit', minute: '2-digit'});
+        }
+
+        function formatMontant(montant, symbole) {
+            if (!montant) return '0';
+            return new Intl.NumberFormat('fr-FR').format(montant) + ' ' + (symbole || '');
+        }
+
+        function getStatutBadge(statut) {
+            const badges = {
+                'PLANIFIE': '<span class="badge badge-info">Planifié</span>',
+                'EN_COURS': '<span class="badge badge-warning">En cours</span>',
+                'TERMINE': '<span class="badge badge-success">Terminé</span>',
+                'ANNULE': '<span class="badge badge-danger">Annulé</span>'
+            };
+            return badges[statut] || statut;
+        }
+
+        function getStatutDiffusionBadge(statut) {
+            const badges = {
+                'PLANIFIE': '<span class="badge badge-info">Planifié</span>',
+                'DIFFUSE': '<span class="badge badge-success">Diffusé</span>',
+                'ANNULE': '<span class="badge badge-danger">Annulé</span>'
+            };
+            return badges[statut] || statut;
+        }
+
+        function showSuccess(message) {
+            alert(message);
+        }
+
+        function showError(message) {
+            alert('Erreur: ' + message);
+        }
+    </script>
+</body>
+</html>

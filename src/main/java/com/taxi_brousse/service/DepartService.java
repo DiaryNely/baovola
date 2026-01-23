@@ -11,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.taxi_brousse.dto.ChiffreAffairesCategorieDTO;
 import com.taxi_brousse.dto.DepartDTO;
+import com.taxi_brousse.dto.PaiementSocieteDTO;
 import com.taxi_brousse.entity.Cooperative;
 import com.taxi_brousse.entity.Depart;
 import com.taxi_brousse.entity.Lieu;
@@ -48,6 +49,7 @@ public class DepartService {
     private final DepartMapper departMapper;
     private final com.taxi_brousse.repository.PaiementRepository paiementRepository;
     private final com.taxi_brousse.repository.DepartPubliciteRepository departPubliciteRepository;
+    private final com.taxi_brousse.repository.PaiementPubliciteRepository paiementPubliciteRepository;
     private final VehiculeSiegeConfigService vehiculeSiegeConfigService;
     private final DepartTarifSiegeService departTarifSiegeService;
     private final SiegeConfigurationService siegeConfigurationService;
@@ -249,6 +251,9 @@ public class DepartService {
 
         // Calculer le chiffre d'affaires maximal (somme des tarifs par place)
         computeChiffreAffairesMax(dto);
+
+        // Calculer les paiements par société pour ce départ
+        computePaiementsParSociete(dto);
         
         return dto;
     }
@@ -388,6 +393,70 @@ public class DepartService {
                 .compareToIgnoreCase(java.util.Objects.requireNonNullElse(b.getRefSiegeCategorieLibelle(), "")));
 
         dto.setChiffreAffairesParCategorie(result);
+    }
+
+    private void computePaiementsParSociete(DepartDTO dto) {
+        if (dto == null || dto.getId() == null) {
+            return;
+        }
+
+        // Récupérer les sociétés ayant des diffusions pour ce départ
+        java.util.List<com.taxi_brousse.entity.SocietePublicitaire> societes = 
+            departPubliciteRepository.findSocietesByDepartId(dto.getId());
+
+        java.util.List<PaiementSocieteDTO> paiementsParSociete = new java.util.ArrayList<>();
+
+        for (com.taxi_brousse.entity.SocietePublicitaire societe : societes) {
+            // Montant facturé pour ce départ et cette société
+            java.math.BigDecimal montantFacture = 
+                departPubliciteRepository.sumMontantFactureByDepartIdAndSocieteId(dto.getId(), societe.getId());
+
+            // Montant total payé par la société (tous départs confondus)
+            java.math.BigDecimal montantTotalPaye = 
+                paiementPubliciteRepository.sumMontantBySocieteId(societe.getId());
+
+            // Montant total facturé pour la société (tous départs confondus)
+            java.math.BigDecimal montantTotalFacture = 
+                departPubliciteRepository.sumMontantFactureBySocieteId(societe.getId());
+
+            // Calculer la proportion de paiement pour ce départ
+            java.math.BigDecimal montantPaye = java.math.BigDecimal.ZERO;
+            if (montantTotalFacture != null && montantTotalFacture.compareTo(java.math.BigDecimal.ZERO) > 0) {
+                // Proportion: (montant de ce départ / montant total) * paiements totaux
+                montantPaye = montantFacture
+                    .multiply(montantTotalPaye != null ? montantTotalPaye : java.math.BigDecimal.ZERO)
+                    .divide(montantTotalFacture, 2, java.math.RoundingMode.HALF_UP);
+            }
+
+            // Reste à payer pour ce départ
+            java.math.BigDecimal montantRestant = montantFacture.subtract(montantPaye);
+
+            // Devise (récupérée depuis les diffusions de la société)
+            java.util.List<com.taxi_brousse.entity.reference.RefDevise> devises = 
+                departPubliciteRepository.findDeviseByDepartId(dto.getId(), 
+                    org.springframework.data.domain.PageRequest.of(0, 1));
+            String deviseCode = "AR";
+            String deviseSymbole = "Ar";
+            if (!devises.isEmpty()) {
+                deviseCode = devises.get(0).getCode();
+                deviseSymbole = devises.get(0).getSymbole();
+            }
+
+            PaiementSocieteDTO paiementSociete = PaiementSocieteDTO.builder()
+                .societeId(societe.getId())
+                .societeCode(societe.getCode())
+                .societeNom(societe.getNom())
+                .montantFacture(montantFacture)
+                .montantPaye(montantPaye)
+                .montantRestant(montantRestant)
+                .deviseCode(deviseCode)
+                .deviseSymbole(deviseSymbole)
+                .build();
+
+            paiementsParSociete.add(paiementSociete);
+        }
+
+        dto.setPaiementsParSociete(paiementsParSociete);
     }
     
     private String genererCodeDepart(Cooperative cooperative, Trajet trajet, LocalDateTime dateDepart) {

@@ -202,4 +202,24 @@ public interface DepartPubliciteRepository extends JpaRepository<DepartPublicite
                    @Param("tarifId") Long tarifId,
                    @Param("montantUnitaire") java.math.BigDecimal montantUnitaire
            );
+
+           /**
+            * Récupère la liste des sociétés publicitaires ayant des diffusions pour un départ
+            */
+           @Query("SELECT DISTINCT dp.publicite.societePublicitaire FROM DepartPublicite dp " +
+                  "WHERE dp.depart.id = :departId " +
+                  "AND dp.statutDiffusion <> 'ANNULE'")
+           List<com.taxi_brousse.entity.SocietePublicitaire> findSocietesByDepartId(@Param("departId") Long departId);
+
+           /**
+            * Montant total facturé pour un départ et une société donnée
+            */
+           @Query("SELECT COALESCE(SUM(dp.montantFacture), 0) " +
+                  "FROM DepartPublicite dp " +
+                  "WHERE dp.depart.id = :departId " +
+                  "AND dp.publicite.societePublicitaire.id = :societeId " +
+                  "AND dp.statutDiffusion <> 'ANNULE'")
+           java.math.BigDecimal sumMontantFactureByDepartIdAndSocieteId(
+                   @Param("departId") Long departId, 
+                   @Param("societeId") Long societeId);
 }

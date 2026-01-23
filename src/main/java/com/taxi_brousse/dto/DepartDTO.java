@@ -68,6 +68,8 @@ public class DepartDTO {
     private String montantDiffusionsPubliciteDeviseCode;
     private String montantDiffusionsPubliciteDeviseSymbole;
 
+    private List<PaiementSocieteDTO> paiementsParSociete = new ArrayList<>();
+
     private java.math.BigDecimal chiffreAffairesMax;
     private String chiffreAffairesMaxDeviseCode;
     private String chiffreAffairesMaxDeviseSymbole;

@@ -1,8 +1,7 @@
 
 Tu es un assistant d’architecture/CRUD pour mon application.
 
-
-D'apres les derniere modification qu'on a eu lie a la nouvelle implementation de tarif publicitaire
+D'apres toutes les derniere modification qu'on a eu  aujourd'hui uniquement
 c'est la derniere modification qu'on a eu 
 
 

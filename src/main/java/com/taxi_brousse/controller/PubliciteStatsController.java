@@ -23,14 +23,15 @@ public class PubliciteStatsController {
     @GetMapping("/ca")
     public ResponseEntity<PubliciteCaStatsDTO> getCaParMois(
             @RequestParam(required = false) Integer mois,
-            @RequestParam(required = false) Integer annee) {
+            @RequestParam(required = false) Integer annee,
+            @RequestParam(required = false) Long societeId) {
         if (mois == null || annee == null) {
             LocalDate now = LocalDate.now();
             mois = now.getMonthValue();
             annee = now.getYear();
         }
 
-        PubliciteCaStatsDTO stats = publiciteStatsService.getCaParMois(mois, annee);
+        PubliciteCaStatsDTO stats = publiciteStatsService.getCaParMois(mois, annee, societeId);
         return ResponseEntity.ok(stats);
     }
 }

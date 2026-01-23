@@ -64,6 +64,10 @@ public class DepartDTO {
     
     private java.math.BigDecimal chiffreAffaires;
 
+    private java.math.BigDecimal montantDiffusionsPublicite;
+    private String montantDiffusionsPubliciteDeviseCode;
+    private String montantDiffusionsPubliciteDeviseSymbole;
+
     private java.math.BigDecimal chiffreAffairesMax;
     private String chiffreAffairesMaxDeviseCode;
     private String chiffreAffairesMaxDeviseSymbole;

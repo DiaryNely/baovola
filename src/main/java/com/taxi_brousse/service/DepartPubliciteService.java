@@ -173,19 +173,22 @@ public class DepartPubliciteService {
         
         DepartPubliciteStatsDTO stats = new DepartPubliciteStatsDTO();
         
-        // Sommer le nombre de répétitions de toutes les diffusions
-        long totalRepetitions = diffusionsDiffusees.stream()
+        // Sommer le nombre de répétitions de toutes les diffusions (tous statuts)
+        long totalRepetitions = diffusions.stream()
             .mapToLong(d -> d.getNombreRepetitions() == null ? 1L : d.getNombreRepetitions().longValue())
-                .sum();
+            .sum();
         
         stats.setNombreDiffusions(totalRepetitions);
-        stats.setMontantTotal(diffusionsDiffusees.stream()
-                .map(DepartPublicite::getMontantFacture)
-                .reduce(java.math.BigDecimal.ZERO, java.math.BigDecimal::add));
+        stats.setMontantTotal(diffusions.stream()
+            .map(DepartPublicite::getMontantFacture)
+            .reduce(java.math.BigDecimal.ZERO, java.math.BigDecimal::add));
         
         if (!diffusionsDiffusees.isEmpty()) {
             stats.setDeviseCode(diffusionsDiffusees.get(0).getRefDevise().getCode());
             stats.setDeviseSymbole(diffusionsDiffusees.get(0).getRefDevise().getSymbole());
+        } else if (!diffusions.isEmpty()) {
+            stats.setDeviseCode(diffusions.get(0).getRefDevise().getCode());
+            stats.setDeviseSymbole(diffusions.get(0).getRefDevise().getSymbole());
         }
         
         return stats;

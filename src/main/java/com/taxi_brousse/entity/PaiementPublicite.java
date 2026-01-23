@@ -42,6 +42,12 @@ public class PaiementPublicite {
     @Column(name = "date_paiement", nullable = false)
     private LocalDateTime datePaiement;
 
+    @Column(name = "facture_mois")
+    private Integer factureMois;
+
+    @Column(name = "facture_annee")
+    private Integer factureAnnee;
+
     @Column(columnDefinition = "TEXT")
     private String note;
 

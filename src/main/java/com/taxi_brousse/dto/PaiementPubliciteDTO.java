@@ -20,6 +20,8 @@ public class PaiementPubliciteDTO {
 
     private Long refDeviseId;
     private LocalDateTime datePaiement;
+    private Integer factureMois;
+    private Integer factureAnnee;
     private String note;
     private LocalDateTime createdAt;
 

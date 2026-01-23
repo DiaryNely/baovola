@@ -8,6 +8,8 @@ import lombok.Data;
 public class PaiementPubliciteResumeDTO {
     private Long societePublicitaireId;
     private String societePublicitaireNom;
+    private Integer mois;
+    private Integer annee;
     private BigDecimal montantTotalFacture;
     private BigDecimal montantTotalPaye;
     private BigDecimal montantRestant;

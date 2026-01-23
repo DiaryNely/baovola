@@ -29,4 +29,23 @@ public interface PaiementPubliciteRepository extends JpaRepository<PaiementPubli
            "WHERE p.societePublicitaire.id = :societeId " +
            "ORDER BY p.datePaiement DESC")
     List<RefDevise> findDeviseBySocieteId(@Param("societeId") Long societeId, Pageable pageable);
+
+    @Query("SELECT COALESCE(SUM(p.montant), 0) FROM PaiementPublicite p " +
+           "WHERE p.societePublicitaire.id = :societeId " +
+           "AND p.factureMois = :mois AND p.factureAnnee = :annee")
+    BigDecimal sumMontantBySocieteIdAndFacturePeriode(
+            @Param("societeId") Long societeId,
+            @Param("mois") Integer mois,
+            @Param("annee") Integer annee);
+
+    @Query("SELECT p FROM PaiementPublicite p " +
+           "LEFT JOIN FETCH p.societePublicitaire sp " +
+           "LEFT JOIN FETCH p.refDevise " +
+           "WHERE sp.id = :societeId " +
+           "AND p.factureMois = :mois AND p.factureAnnee = :annee " +
+           "ORDER BY p.datePaiement DESC")
+    List<PaiementPublicite> findBySocieteIdAndFacturePeriode(
+            @Param("societeId") Long societeId,
+            @Param("mois") Integer mois,
+            @Param("annee") Integer annee);
 }

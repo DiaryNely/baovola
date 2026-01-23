@@ -102,7 +102,6 @@ public interface DepartPubliciteRepository extends JpaRepository<DepartPublicite
                  "JOIN p.societePublicitaire sp " +
                  "JOIN dp.refDevise devise " +
                  "WHERE dp.dateDiffusion BETWEEN :dateDebut AND :dateFin " +
-                 "AND dp.statutDiffusion = 'DIFFUSE' " +
                  "GROUP BY p.id, p.titre, sp.nom, devise.code, devise.symbole " +
                  "ORDER BY SUM(dp.montantFacture) DESC")
        List<PubliciteCaStatRowDTO> findCaParPublicite(
@@ -110,13 +109,51 @@ public interface DepartPubliciteRepository extends JpaRepository<DepartPublicite
               @Param("dateFin") LocalDateTime dateFin
        );
 
+       @Query("SELECT new com.taxi_brousse.dto.PubliciteCaStatRowDTO(" +
+                 "p.id, p.titre, sp.nom, " +
+                 "SUM(COALESCE(dp.nombreRepetitions, 1)), " +
+                 "CASE WHEN SUM(COALESCE(dp.nombreRepetitions, 1)) = 0 THEN 0 " +
+                 "ELSE SUM(dp.montantFacture) / SUM(COALESCE(dp.nombreRepetitions, 1)) END, " +
+                 "SUM(dp.montantFacture), " +
+                 "devise.code, devise.symbole) " +
+                 "FROM DepartPublicite dp " +
+                 "JOIN dp.publicite p " +
+                 "JOIN p.societePublicitaire sp " +
+                 "JOIN dp.refDevise devise " +
+                 "WHERE dp.dateDiffusion BETWEEN :dateDebut AND :dateFin " +
+                 "AND sp.id = :societeId " +
+                 "GROUP BY p.id, p.titre, sp.nom, devise.code, devise.symbole " +
+                 "ORDER BY SUM(dp.montantFacture) DESC")
+       List<PubliciteCaStatRowDTO> findCaParPubliciteBySociete(
+              @Param("dateDebut") LocalDateTime dateDebut,
+              @Param("dateFin") LocalDateTime dateFin,
+              @Param("societeId") Long societeId
+       );
+
+          /**
+           * Montant total facturé pour un départ (diffusions non annulées)
+           */
+          @Query("SELECT COALESCE(SUM(dp.montantFacture), 0) " +
+                 "FROM DepartPublicite dp " +
+                 "WHERE dp.depart.id = :departId " +
+                 "AND dp.statutDiffusion <> 'ANNULE'")
+          java.math.BigDecimal sumMontantFactureByDepartId(@Param("departId") Long departId);
+
+          /**
+           * Dernière devise utilisée pour un départ (via diffusions)
+           */
+          @Query("SELECT dp.refDevise FROM DepartPublicite dp " +
+                 "WHERE dp.depart.id = :departId " +
+                 "ORDER BY dp.dateDiffusion DESC")
+          List<RefDevise> findDeviseByDepartId(@Param("departId") Long departId, Pageable pageable);
+
            /**
             * Montant total facturé pour une société publicitaire
             */
            @Query("SELECT COALESCE(SUM(dp.montantFacture), 0) " +
                   "FROM DepartPublicite dp " +
                   "WHERE dp.publicite.societePublicitaire.id = :societeId " +
-                  "AND dp.statutDiffusion = 'DIFFUSE'")
+                  "AND dp.statutDiffusion <> 'ANNULE'")
            java.math.BigDecimal sumMontantFactureBySocieteId(@Param("societeId") Long societeId);
 
            /**
@@ -126,6 +163,32 @@ public interface DepartPubliciteRepository extends JpaRepository<DepartPublicite
                   "WHERE dp.publicite.societePublicitaire.id = :societeId " +
                   "ORDER BY dp.dateDiffusion DESC")
            List<RefDevise> findDeviseBySocieteId(@Param("societeId") Long societeId, Pageable pageable);
+
+          @Query("SELECT dp FROM DepartPublicite dp " +
+                "LEFT JOIN FETCH dp.publicite p " +
+                "LEFT JOIN FETCH p.societePublicitaire sp " +
+                "LEFT JOIN FETCH dp.depart d " +
+                "LEFT JOIN FETCH d.trajet t " +
+                "LEFT JOIN FETCH t.lieuDepart " +
+                "LEFT JOIN FETCH t.lieuArrivee " +
+                "LEFT JOIN FETCH dp.refDevise " +
+                "WHERE sp.id = :societeId " +
+                "AND dp.dateDiffusion BETWEEN :dateDebut AND :dateFin " +
+                "ORDER BY dp.dateDiffusion DESC")
+          List<DepartPublicite> findBySocieteIdAndDateDiffusionBetween(
+                 @Param("societeId") Long societeId,
+                 @Param("dateDebut") LocalDateTime dateDebut,
+                 @Param("dateFin") LocalDateTime dateFin);
+
+          @Query("SELECT COALESCE(SUM(dp.montantFacture), 0) " +
+                "FROM DepartPublicite dp " +
+                "WHERE dp.publicite.societePublicitaire.id = :societeId " +
+                "AND dp.dateDiffusion BETWEEN :dateDebut AND :dateFin " +
+                "AND dp.statutDiffusion <> 'ANNULE'")
+          java.math.BigDecimal sumMontantFactureBySocieteIdAndPeriode(
+                 @Param("societeId") Long societeId,
+                 @Param("dateDebut") LocalDateTime dateDebut,
+                 @Param("dateFin") LocalDateTime dateFin);
 
            /**
             * Recalcule le montant_facture pour toutes les diffusions liées à un tarif

@@ -19,6 +19,7 @@ import com.taxi_brousse.repository.DepartPubliciteRepository;
 import com.taxi_brousse.repository.PaiementPubliciteRepository;
 import com.taxi_brousse.repository.RefDeviseRepository;
 import com.taxi_brousse.repository.SocietePublicitaireRepository;
+import com.taxi_brousse.mapper.DepartPubliciteMapper;
 
 import lombok.RequiredArgsConstructor;
 
@@ -31,14 +32,31 @@ public class PaiementPubliciteService {
     private final DepartPubliciteRepository departPubliciteRepository;
     private final SocietePublicitaireRepository societePublicitaireRepository;
     private final RefDeviseRepository refDeviseRepository;
+    private final DepartPubliciteMapper departPubliciteMapper;
 
     @Transactional(readOnly = true)
     public PaiementPubliciteResumeDTO getResume(Long societeId) {
+        return getResumeByPeriode(societeId, null, null);
+    }
+
+    @Transactional(readOnly = true)
+    public PaiementPubliciteResumeDTO getResumeByPeriode(Long societeId, Integer mois, Integer annee) {
         SocietePublicitaire societe = societePublicitaireRepository.findById(societeId)
                 .orElseThrow(() -> new ResourceNotFoundException("SocietePublicitaire", "id", societeId));
 
-        BigDecimal totalFacture = departPubliciteRepository.sumMontantFactureBySocieteId(societeId);
-        BigDecimal totalPaye = paiementPubliciteRepository.sumMontantBySocieteId(societeId);
+        BigDecimal totalFacture;
+        BigDecimal totalPaye;
+
+        if (mois != null && annee != null) {
+            java.time.YearMonth yearMonth = java.time.YearMonth.of(annee, mois);
+            java.time.LocalDateTime dateDebut = yearMonth.atDay(1).atStartOfDay();
+            java.time.LocalDateTime dateFin = java.time.LocalDateTime.of(yearMonth.atEndOfMonth(), java.time.LocalTime.MAX);
+            totalFacture = departPubliciteRepository.sumMontantFactureBySocieteIdAndPeriode(societeId, dateDebut, dateFin);
+            totalPaye = paiementPubliciteRepository.sumMontantBySocieteIdAndFacturePeriode(societeId, mois, annee);
+        } else {
+            totalFacture = departPubliciteRepository.sumMontantFactureBySocieteId(societeId);
+            totalPaye = paiementPubliciteRepository.sumMontantBySocieteId(societeId);
+        }
         BigDecimal restant = totalFacture.subtract(totalPaye);
         if (restant.compareTo(BigDecimal.ZERO) < 0) {
             restant = BigDecimal.ZERO;
@@ -49,6 +67,8 @@ public class PaiementPubliciteService {
         PaiementPubliciteResumeDTO resume = new PaiementPubliciteResumeDTO();
         resume.setSocietePublicitaireId(societe.getId());
         resume.setSocietePublicitaireNom(societe.getNom());
+        resume.setMois(mois);
+        resume.setAnnee(annee);
         resume.setMontantTotalFacture(totalFacture);
         resume.setMontantTotalPaye(totalPaye);
         resume.setMontantRestant(restant);
@@ -66,6 +86,23 @@ public class PaiementPubliciteService {
                 .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
+    public List<PaiementPubliciteDTO> listBySocieteAndPeriode(Long societeId, Integer mois, Integer annee) {
+        return paiementPubliciteRepository.findBySocieteIdAndFacturePeriode(societeId, mois, annee).stream()
+                .map(this::toDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public List<com.taxi_brousse.dto.DepartPubliciteDTO> listDiffusionsBySocieteAndPeriode(Long societeId, Integer mois, Integer annee) {
+        java.time.YearMonth yearMonth = java.time.YearMonth.of(annee, mois);
+        java.time.LocalDateTime dateDebut = yearMonth.atDay(1).atStartOfDay();
+        java.time.LocalDateTime dateFin = java.time.LocalDateTime.of(yearMonth.atEndOfMonth(), java.time.LocalTime.MAX);
+        return departPubliciteRepository.findBySocieteIdAndDateDiffusionBetween(societeId, dateDebut, dateFin).stream()
+                .map(departPubliciteMapper::toDTO)
+                .collect(Collectors.toList());
+    }
+
     public PaiementPubliciteDTO create(PaiementPubliciteDTO dto) {
         SocietePublicitaire societe = societePublicitaireRepository.findById(dto.getSocietePublicitaireId())
                 .orElseThrow(() -> new ResourceNotFoundException("SocietePublicitaire", "id", dto.getSocietePublicitaireId()));
@@ -74,7 +111,15 @@ public class PaiementPubliciteService {
             throw new BadRequestException("Le montant doit être positif");
         }
 
-        PaiementPubliciteResumeDTO resume = getResume(societe.getId());
+        Integer factureMois = dto.getFactureMois();
+        Integer factureAnnee = dto.getFactureAnnee();
+        if (factureMois == null || factureAnnee == null) {
+            java.time.LocalDateTime baseDate = dto.getDatePaiement() != null ? dto.getDatePaiement() : java.time.LocalDateTime.now();
+            factureMois = baseDate.getMonthValue();
+            factureAnnee = baseDate.getYear();
+        }
+
+        PaiementPubliciteResumeDTO resume = getResumeByPeriode(societe.getId(), factureMois, factureAnnee);
         if (resume.getMontantRestant() != null && dto.getMontant().compareTo(resume.getMontantRestant()) > 0) {
             throw new BadRequestException("Le montant dépasse le reste à payer");
         }
@@ -96,6 +141,8 @@ public class PaiementPubliciteService {
         paiement.setMontant(dto.getMontant());
         paiement.setRefDevise(devise);
         paiement.setDatePaiement(dto.getDatePaiement());
+        paiement.setFactureMois(factureMois);
+        paiement.setFactureAnnee(factureAnnee);
         paiement.setNote(dto.getNote());
 
         paiement = paiementPubliciteRepository.save(paiement);
@@ -124,6 +171,8 @@ public class PaiementPubliciteService {
         dto.setDeviseCode(entity.getRefDevise().getCode());
         dto.setDeviseSymbole(entity.getRefDevise().getSymbole());
         dto.setDatePaiement(entity.getDatePaiement());
+        dto.setFactureMois(entity.getFactureMois());
+        dto.setFactureAnnee(entity.getFactureAnnee());
         dto.setNote(entity.getNote());
         dto.setCreatedAt(entity.getCreatedAt());
         return dto;

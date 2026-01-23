@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.taxi_brousse.dto.PaiementPubliciteDTO;
@@ -26,13 +27,33 @@ public class PaiementPubliciteController {
     private final PaiementPubliciteService paiementPubliciteService;
 
     @GetMapping("/societe/{societeId}")
-    public ResponseEntity<List<PaiementPubliciteDTO>> listBySociete(@PathVariable Long societeId) {
+    public ResponseEntity<List<PaiementPubliciteDTO>> listBySociete(
+            @PathVariable Long societeId,
+            @RequestParam(required = false) Integer mois,
+            @RequestParam(required = false) Integer annee) {
+        if (mois != null && annee != null) {
+            return ResponseEntity.ok(paiementPubliciteService.listBySocieteAndPeriode(societeId, mois, annee));
+        }
         return ResponseEntity.ok(paiementPubliciteService.listBySociete(societeId));
     }
 
     @GetMapping("/societe/{societeId}/resume")
-    public ResponseEntity<PaiementPubliciteResumeDTO> getResume(@PathVariable Long societeId) {
+    public ResponseEntity<PaiementPubliciteResumeDTO> getResume(
+            @PathVariable Long societeId,
+            @RequestParam(required = false) Integer mois,
+            @RequestParam(required = false) Integer annee) {
+        if (mois != null && annee != null) {
+            return ResponseEntity.ok(paiementPubliciteService.getResumeByPeriode(societeId, mois, annee));
+        }
         return ResponseEntity.ok(paiementPubliciteService.getResume(societeId));
+    }
+
+    @GetMapping("/societe/{societeId}/diffusions")
+    public ResponseEntity<List<com.taxi_brousse.dto.DepartPubliciteDTO>> listDiffusions(
+            @PathVariable Long societeId,
+            @RequestParam Integer mois,
+            @RequestParam Integer annee) {
+        return ResponseEntity.ok(paiementPubliciteService.listDiffusionsBySocieteAndPeriode(societeId, mois, annee));
     }
 
     @PostMapping

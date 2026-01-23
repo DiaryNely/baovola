@@ -202,19 +202,9 @@ public class GestionController {
         return "taxi_brousse/tarifs-remises";
     }
 
-    @GetMapping("/statistiques-publicite")
-    public String statistiquesPublicite(Model model) {
-        return "taxi_brousse/statistiques-publicite";
-    }
-
     @GetMapping("/paiements-publicite")
     public String paiementsPublicite(Model model) {
         return "taxi_brousse/paiements-publicite";
-    }
-
-    @GetMapping("/paiement-publicite")
-    public String paiementPublicite(Model model) {
-        return "taxi_brousse/paiement-publicite";
     }
 
     @GetMapping("/siege-categories")

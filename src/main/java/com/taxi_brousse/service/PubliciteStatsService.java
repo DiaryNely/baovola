@@ -24,11 +24,17 @@ public class PubliciteStatsService {
     private final DepartPubliciteRepository departPubliciteRepository;
 
     public PubliciteCaStatsDTO getCaParMois(int mois, int annee) {
+        return getCaParMois(mois, annee, null);
+    }
+
+    public PubliciteCaStatsDTO getCaParMois(int mois, int annee, Long societeId) {
         YearMonth yearMonth = YearMonth.of(annee, mois);
         LocalDateTime dateDebut = yearMonth.atDay(1).atStartOfDay();
         LocalDateTime dateFin = LocalDateTime.of(yearMonth.atEndOfMonth(), LocalTime.MAX);
 
-        List<PubliciteCaStatRowDTO> details = departPubliciteRepository.findCaParPublicite(dateDebut, dateFin);
+        List<PubliciteCaStatRowDTO> details = societeId != null
+                ? departPubliciteRepository.findCaParPubliciteBySociete(dateDebut, dateFin, societeId)
+                : departPubliciteRepository.findCaParPublicite(dateDebut, dateFin);
 
         PubliciteCaStatsDTO stats = new PubliciteCaStatsDTO();
         stats.setMois(mois);

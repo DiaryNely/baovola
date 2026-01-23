@@ -47,6 +47,7 @@ public class DepartService {
     private final ReservationPassagerRepository reservationPassagerRepository;
     private final DepartMapper departMapper;
     private final com.taxi_brousse.repository.PaiementRepository paiementRepository;
+    private final com.taxi_brousse.repository.DepartPubliciteRepository departPubliciteRepository;
     private final VehiculeSiegeConfigService vehiculeSiegeConfigService;
     private final DepartTarifSiegeService departTarifSiegeService;
     private final SiegeConfigurationService siegeConfigurationService;
@@ -231,6 +232,17 @@ public class DepartService {
         // Calculer le chiffre d'affaires
         java.math.BigDecimal chiffreAffaires = paiementRepository.sumMontantByDepartId(dto.getId());
         dto.setChiffreAffaires(chiffreAffaires);
+
+        // Calculer le montant total des diffusions publicitaires (non annulées)
+        java.math.BigDecimal montantDiffusions = departPubliciteRepository.sumMontantFactureByDepartId(dto.getId());
+        dto.setMontantDiffusionsPublicite(montantDiffusions);
+
+        java.util.List<com.taxi_brousse.entity.reference.RefDevise> devisesDiffusions =
+            departPubliciteRepository.findDeviseByDepartId(dto.getId(), org.springframework.data.domain.PageRequest.of(0, 1));
+        if (!devisesDiffusions.isEmpty()) {
+            dto.setMontantDiffusionsPubliciteDeviseCode(devisesDiffusions.get(0).getCode());
+            dto.setMontantDiffusionsPubliciteDeviseSymbole(devisesDiffusions.get(0).getSymbole());
+        }
 
         // Calculer le chiffre d'affaires par catégorie de siège
         computeChiffreAffairesParCategorie(dto);

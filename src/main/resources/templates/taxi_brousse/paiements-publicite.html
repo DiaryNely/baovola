@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Paiements Publicité - Gestion Taxi Brousse</title>
+    <link href="vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">
+    <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet" type="text/css">
+    <link href="css/ruang-admin.min.css" rel="stylesheet">
+    <link href="vendor/datatables/dataTables.bootstrap4.min.css" rel="stylesheet">
+</head>
+
+<body id="page-top">
+    <div id="wrapper">
+        <!-- Sidebar -->
+        <div th:replace="~{taxi_brousse/fragments :: sidebar}"></div>
+
+        <!-- Content Wrapper -->
+        <div id="content-wrapper" class="d-flex flex-column">
+            <div id="content">
+                <!-- TopBar -->
+                <div th:replace="~{taxi_brousse/fragments :: topbar}"></div>
+
+                <!-- Container Fluid-->
+                <div class="container-fluid" id="container-wrapper">
+                    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+                        <h1 class="h3 mb-0 text-gray-800">Paiements Publicité</h1>
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item"><a href="/">Accueil</a></li>
+                            <li class="breadcrumb-item">Publicité</li>
+                            <li class="breadcrumb-item active" aria-current="page">Paiements</li>
+                        </ol>
+                    </div>
+
+                    <!-- Sélection société -->
+                    <div class="row mb-3">
+                        <div class="col-lg-12">
+                            <div class="card mb-4">
+                                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                                    <h6 class="m-0 font-weight-bold text-primary">Sélection de la société</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="form-row align-items-end">
+                                        <div class="form-group col-md-5">
+                                            <label for="societeSelect">Société publicitaire</label>
+                                            <select id="societeSelect" class="form-control">
+                                                <option value="">-- Sélectionnez une société --</option>
+                                            </select>
+                                        </div>
+                                        <div class="form-group col-md-2">
+                                            <label for="moisSelect">Mois</label>
+                                            <select id="moisSelect" class="form-control">
+                                                <option value="1">Janvier</option>
+                                                <option value="2">Février</option>
+                                                <option value="3">Mars</option>
+                                                <option value="4">Avril</option>
+                                                <option value="5">Mai</option>
+                                                <option value="6">Juin</option>
+                                                <option value="7">Juillet</option>
+                                                <option value="8">Août</option>
+                                                <option value="9">Septembre</option>
+                                                <option value="10">Octobre</option>
+                                                <option value="11">Novembre</option>
+                                                <option value="12">Décembre</option>
+                                            </select>
+                                        </div>
+                                        <div class="form-group col-md-2">
+                                            <label for="anneeInput">Année</label>
+                                            <input type="number" class="form-control" id="anneeInput" min="2000" max="2100">
+                                        </div>
+                                        <div class="form-group col-md-3">
+                                            <button class="btn btn-primary" onclick="chargerPaiements()">
+                                                <i class="fas fa-search"></i> Charger
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Résumé -->
+                    <div class="row" id="resumeRow" style="display: none;">
+                        <div class="col-lg-4">
+                            <div class="card mb-4 bg-info text-white">
+                                <div class="card-body">
+                                    <h5 class="card-title">Total facturé</h5>
+                                    <p class="h3" id="montantFacture">0 Ar</p>
+                                    <p id="periodeFactureLabel">période</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-4">
+                            <div class="card mb-4 bg-success text-white">
+                                <div class="card-body">
+                                    <h5 class="card-title">Déjà payé</h5>
+                                    <p class="h3" id="montantPaye">0 Ar</p>
+                                    <p>paiements reçus</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-4">
+                            <div class="card mb-4 bg-warning text-white">
+                                <div class="card-body">
+                                    <h5 class="card-title">Reste à payer</h5>
+                                    <p class="h3" id="montantRestant">0 Ar</p>
+                                    <p>sur total facturé</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-lg-4">
+                            <div class="card mb-4 bg-primary text-white">
+                                <div class="card-body">
+                                    <h5 class="card-title">Pourcentage déjà payé</h5>
+                                    <p class="h3" id="pourcentagePayeCard">0%</p>
+                                    <p>sur total facturé</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-4">
+                            <div class="card mb-4 bg-danger text-white">
+                                <div class="card-body">
+                                    <h5 class="card-title">Pourcentage reste à payer</h5>
+                                    <p class="h3" id="pourcentageRestantCard">0%</p>
+                                    <p>sur total facturé</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    
+
+                    <!-- Historique -->
+                    <div class="row" id="paiementsRow" style="display: none;">
+                        <div class="col-lg-12">
+                            <div class="card mb-4">
+                                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                                    <h6 class="m-0 font-weight-bold text-primary">Historique des paiements</h6>
+                                    <button class="btn btn-primary btn-sm" onclick="showAddPaiementModal()">
+                                        <i class="fas fa-plus"></i> Nouveau paiement
+                                    </button>
+                                </div>
+                                <div class="card-body">
+                                    <div class="table-responsive">
+                                        <table class="table table-bordered table-hover" id="paiementsTable" width="100%" cellspacing="0">
+                                            <thead>
+                                                <tr>
+                                                    <th>Date</th>
+                                                    <th>Montant</th>
+                                                    <th>Note</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody></tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row" id="emptyRow" style="display: none;">
+                        <div class="col-lg-12">
+                            <div class="alert alert-warning">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                Aucun paiement trouvé pour cette société.
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Détails des diffusions (facture mensuelle) -->
+                    <div class="row" id="diffusionsRow" style="display: none;">
+                        <div class="col-lg-12">
+                            <div class="card mb-4">
+                                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                                    <h6 class="m-0 font-weight-bold text-primary">Détails des diffusions (période)</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="table-responsive">
+                                        <table class="table table-bordered table-hover" id="diffusionsTable" width="100%" cellspacing="0">
+                                            <thead>
+                                                <tr>
+                                                    <th>Date diffusion</th>
+                                                    <th>Départ</th>
+                                                    <th>Publicité</th>
+                                                    <th>Répétitions</th>
+                                                    <th>Montant</th>
+                                                    <th>Statut</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody></tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!---Container Fluid-->
+            </div>
+
+            <!-- Footer -->
+            <div th:replace="~{taxi_brousse/fragments :: footer}"></div>
+        </div>
+    </div>
+
+    <!-- Scroll to top -->
+    <a class="scroll-to-top rounded" href="#page-top">
+        <i class="fas fa-angle-up"></i>
+    </a>
+
+    <!-- Logout Modal -->
+    <div th:replace="~{taxi_brousse/fragments :: logoutModal}"></div>
+
+    <!-- Modal Ajouter Paiement -->
+    <div class="modal fade" id="addPaiementModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Nouveau paiement</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="addPaiementForm">
+                        <div class="form-group">
+                            <label for="montantPaiement">Montant *</label>
+                            <input type="number" class="form-control" id="montantPaiement" min="1" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="datePaiement">Date paiement</label>
+                            <input type="datetime-local" class="form-control" id="datePaiement">
+                        </div>
+                        <div class="form-group">
+                            <label for="notePaiement">Note</label>
+                            <textarea class="form-control" id="notePaiement" rows="2"></textarea>
+                        </div>
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i>
+                            Paiement partiel autorisé. Le solde sera recalculé sur toutes les diffusions non annulées.
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuler</button>
+                    <button type="button" class="btn btn-primary" onclick="savePaiement()">
+                        <i class="fas fa-save"></i> Enregistrer
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="vendor/jquery/jquery.min.js"></script>
+    <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="vendor/jquery-easing/jquery.easing.min.js"></script>
+    <script src="js/ruang-admin.min.js"></script>
+    <script src="vendor/datatables/jquery.dataTables.min.js"></script>
+    <script src="vendor/datatables/dataTables.bootstrap4.min.js"></script>
+
+    <script th:inline="none">
+        let paiementsTable = null;
+        let diffusionsTable = null;
+        let selectedSocieteId = null;
+        let deviseSymbole = 'Ar';
+
+        $(document).ready(function() {
+            const now = new Date();
+            $('#moisSelect').val(now.getMonth() + 1);
+            $('#anneeInput').val(now.getFullYear());
+            loadSocietes();
+        });
+
+        function loadSocietes() {
+            $.ajax({
+                url: '/api/societes-publicitaires/actives',
+                method: 'GET',
+                success: function(societes) {
+                    const select = $('#societeSelect');
+                    select.empty().append('<option value="">-- Sélectionnez une société --</option>');
+                    societes.forEach(s => {
+                        const option = $('<option>').val(s.id).text(`${s.code} - ${s.nom}`);
+                        select.append(option);
+                    });
+                },
+                error: function() {
+                    console.error('Erreur chargement sociétés');
+                }
+            });
+        }
+
+        function chargerPaiements() {
+            selectedSocieteId = $('#societeSelect').val();
+            const mois = parseInt($('#moisSelect').val());
+            const annee = parseInt($('#anneeInput').val());
+            if (!selectedSocieteId) {
+                alert('Veuillez sélectionner une société');
+                return;
+            }
+            if (!mois || !annee) {
+                alert('Veuillez sélectionner un mois et une année');
+                return;
+            }
+
+            $.ajax({
+                url: `/api/paiements-publicite/societe/${selectedSocieteId}/resume?mois=${mois}&annee=${annee}`,
+                method: 'GET',
+                success: function(resume) {
+                    deviseSymbole = resume.deviseSymbole || 'Ar';
+                    $('#montantFacture').text(formatMontant(resume.montantTotalFacture, deviseSymbole));
+                    $('#montantPaye').text(formatMontant(resume.montantTotalPaye, deviseSymbole));
+                    $('#montantRestant').text(formatMontant(resume.montantRestant, deviseSymbole));
+                    const total = resume.montantTotalFacture || 0;
+                    const paye = resume.montantTotalPaye || 0;
+                    const restant = resume.montantRestant || 0;
+                    const pctPaye = total > 0 ? Math.min(100, (paye / total) * 100) : 0;
+                    const pctRestant = total > 0 ? Math.min(100, (restant / total) * 100) : 0;
+                    $('#pourcentagePaye').text(pctPaye.toFixed(0) + '%');
+                    $('#pourcentageRestant').text(pctRestant.toFixed(0) + '%');
+                    $('#pourcentageTotal').text('100%');
+                    $('#pourcentagePayeCard').text(pctPaye.toFixed(0) + '%');
+                    $('#pourcentageRestantCard').text(pctRestant.toFixed(0) + '%');
+                    $('#pourcentagePayeBadge').text(pctPaye.toFixed(0) + '% payé');
+                    $('#pourcentageRestantBadge').text(pctRestant.toFixed(0) + '% restant');
+                    const moisLabel = $('#moisSelect option:selected').text();
+                    $('#periodeFactureLabel').text(`${moisLabel} ${annee}`);
+                    $('#resumeRow').show();
+                    $('#resumeBadgesRow').show();
+                }
+            });
+
+            $.ajax({
+                url: `/api/paiements-publicite/societe/${selectedSocieteId}?mois=${mois}&annee=${annee}`,
+                method: 'GET',
+                success: function(paiements) {
+                    displayPaiements(paiements);
+                }
+            });
+
+            $.ajax({
+                url: `/api/paiements-publicite/societe/${selectedSocieteId}/diffusions?mois=${mois}&annee=${annee}`,
+                method: 'GET',
+                success: function(diffusions) {
+                    displayDiffusions(diffusions);
+                }
+            });
+        }
+
+        function displayPaiements(paiements) {
+            if (paiementsTable) {
+                paiementsTable.destroy();
+            }
+            const tbody = $('#paiementsTable tbody');
+            tbody.empty();
+
+            if (!paiements || paiements.length === 0) {
+                $('#emptyRow').show();
+                $('#paiementsRow').show();
+                return;
+            }
+
+            paiements.forEach(p => {
+                const tr = $('<tr>');
+                tr.append($('<td>').text(formatDateTime(p.datePaiement)));
+                tr.append($('<td>').text(formatMontant(p.montant, p.deviseSymbole || deviseSymbole)));
+                tr.append($('<td>').text(p.note || ''));
+                tbody.append(tr);
+            });
+
+            paiementsTable = $('#paiementsTable').DataTable({
+                language: {
+                    url: 'https://cdn.datatables.net/plug-ins/1.13.7/i18n/fr-FR.json'
+                },
+                order: [[0, 'desc']]
+            });
+
+            $('#emptyRow').hide();
+            $('#paiementsRow').show();
+        }
+
+        function displayDiffusions(diffusions) {
+            if (diffusionsTable) {
+                diffusionsTable.destroy();
+            }
+            const tbody = $('#diffusionsTable tbody');
+            tbody.empty();
+
+            if (!diffusions || diffusions.length === 0) {
+                $('#diffusionsRow').hide();
+                return;
+            }
+
+            diffusions.forEach(d => {
+                const tr = $('<tr>');
+                tr.append($('<td>').text(formatDateTime(d.dateDiffusion)));
+                tr.append($('<td>').text(d.departCode || ''));
+                tr.append($('<td>').text(d.publiciteTitre || ''));
+                tr.append($('<td>').html(`<span class="badge badge-info">${d.nombreRepetitions || 0}</span>`));
+                tr.append($('<td>').text(formatMontant(d.montantFacture, d.deviseSymbole || deviseSymbole)));
+                tr.append($('<td>').text(d.statutDiffusion || ''));
+                tbody.append(tr);
+            });
+
+            diffusionsTable = $('#diffusionsTable').DataTable({
+                language: {
+                    url: 'https://cdn.datatables.net/plug-ins/1.13.7/i18n/fr-FR.json'
+                },
+                order: [[0, 'desc']]
+            });
+
+            $('#diffusionsRow').show();
+        }
+
+        function showAddPaiementModal() {
+            if (!selectedSocieteId) {
+                alert('Veuillez sélectionner une société');
+                return;
+            }
+            $('#montantPaiement').val('');
+            $('#datePaiement').val('');
+            $('#notePaiement').val('');
+            $('#addPaiementModal').modal('show');
+        }
+
+        function savePaiement() {
+            const montant = parseFloat($('#montantPaiement').val());
+            const datePaiement = $('#datePaiement').val();
+            const note = $('#notePaiement').val();
+            const mois = parseInt($('#moisSelect').val());
+            const annee = parseInt($('#anneeInput').val());
+
+            if (!montant || montant <= 0) {
+                alert('Montant invalide');
+                return;
+            }
+
+            const data = {
+                societePublicitaireId: selectedSocieteId,
+                montant: montant,
+                datePaiement: datePaiement || null,
+                factureMois: mois || null,
+                factureAnnee: annee || null,
+                note: note || null
+            };
+
+            $.ajax({
+                url: '/api/paiements-publicite',
+                method: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(data),
+                success: function() {
+                    $('#addPaiementModal').modal('hide');
+                    chargerPaiements();
+                },
+                error: function(xhr) {
+                    const msg = xhr.responseJSON?.message || 'Erreur lors du paiement';
+                    alert(msg);
+                }
+            });
+        }
+
+        function formatMontant(montant, symbole) {
+            if (!montant) return '0 ' + (symbole || '');
+            return new Intl.NumberFormat('fr-FR').format(montant) + ' ' + (symbole || '');
+        }
+
+        function formatDateTime(dateStr) {
+            if (!dateStr) return '';
+            const date = new Date(dateStr);
+            return date.toLocaleString('fr-FR');
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,1062 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="description" content="">
+  <meta name="author" content="">
+  <link href="img/logo/logo.png" rel="icon">
+  <title>Taxi Brousse - Départs</title>
+  <link href="vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">
+  <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet" type="text/css">
+  <link href="css/ruang-admin.min.css" rel="stylesheet">
+</head>
+
+<body id="page-top">
+  <div id="wrapper">
+    <!-- Sidebar -->
+    <div th:replace="~{taxi_brousse/fragments :: sidebar}"></div>
+    <ul class="navbar-nav sidebar sidebar-light accordion" id="accordionSidebar" style="display:none;">
+      <a class="sidebar-brand d-flex align-items-center justify-content-center" href="/">
+        <div class="sidebar-brand-icon">
+          <img src="img/logo/logo2.png">
+        </div>
+        <div class="sidebar-brand-text mx-3">Taxi Brousse</div>
+      </a>
+      <hr class="sidebar-divider my-0">
+      <li class="nav-item">
+        <a class="nav-link" href="/">
+          <i class="fas fa-fw fa-tachometer-alt"></i>
+          <span>Dashboard</span></a>
+      </li>
+      <hr class="sidebar-divider">
+      <div class="sidebar-heading">
+        Gestion
+      </div>
+      <li class="nav-item">
+        <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseGestion"
+          aria-expanded="true" aria-controls="collapseGestion">
+          <i class="fas fa-fw fa-car"></i>
+          <span>Transport</span>
+        </a>
+        <div id="collapseGestion" class="collapse" aria-labelledby="headingGestion" data-parent="#accordionSidebar">
+          <div class="bg-white py-2 collapse-inner rounded">
+            <h6 class="collapse-header">Gestion Transport</h6>
+            <a class="collapse-item" href="/cooperatives">Coopératives</a>
+            <a class="collapse-item" href="/vehicules">Véhicules</a>
+            <a class="collapse-item" href="/chauffeurs">Chauffeurs</a>
+            <a class="collapse-item" href="/trajets">Trajets</a>
+            <a class="collapse-item" href="/lieux">Lieux</a>
+          </div>
+        </div>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="/tarifs">
+          <i class="fas fa-fw fa-dollar-sign"></i>
+          <span>Tarifs</span>
+        </a>
+      </li>
+      <li class="nav-item active">
+        <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseReservation" aria-expanded="true"
+          aria-controls="collapseReservation">
+          <i class="fas fa-fw fa-ticket-alt"></i>
+          <span>Réservations</span>
+        </a>
+        <div id="collapseReservation" class="collapse show" aria-labelledby="headingReservation" data-parent="#accordionSidebar">
+          <div class="bg-white py-2 collapse-inner rounded">
+            <h6 class="collapse-header">Réservations</h6>
+            <a class="collapse-item" href="/clients">Clients</a>
+            <a class="collapse-item" href="/reservations">Réservations</a>
+            <a class="collapse-item" href="/reservations-critere">Réservations avec critere</a>
+            <a class="collapse-item active" href="/departs">Départs</a>            <a class="collapse-item" href="/billets">Billets</a>          </div>
+        </div>
+      </li>
+      <hr class="sidebar-divider">
+      <div class="version" id="version-ruangadmin"></div>
+    </ul>
+    <!-- Sidebar -->
+    <div id="content-wrapper" class="d-flex flex-column">
+      <div id="content">
+        <!-- TopBar -->
+        <nav class="navbar navbar-expand navbar-light bg-navbar topbar mb-4 static-top">
+          <button id="sidebarToggleTop" class="btn btn-link rounded-circle mr-3">
+            <i class="fa fa-bars"></i>
+          </button>
+          <ul class="navbar-nav ml-auto">
+            <div class="topbar-divider d-none d-sm-block"></div>
+            <li class="nav-item dropdown no-arrow">
+              <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-toggle="dropdown"
+                aria-haspopup="true" aria-expanded="false">
+                <img class="img-profile rounded-circle" src="img/boy.png" style="max-width: 60px">
+                <span class="ml-2 d-none d-lg-inline text-white small">Admin</span>
+              </a>
+              <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in" aria-labelledby="userDropdown">
+                <a class="dropdown-item" href="#">
+                  <i class="fas fa-user fa-sm fa-fw mr-2 text-gray-400"></i>
+                  Profile
+                </a>
+                <div class="dropdown-divider"></div>
+                <a class="dropdown-item" href="javascript:void(0);" data-toggle="modal" data-target="#logoutModal">
+                  <i class="fas fa-sign-out-alt fa-sm fa-fw mr-2 text-gray-400"></i>
+                  Logout
+                </a>
+              </div>
+            </li>
+          </ul>
+        </nav>
+        <!-- Topbar -->
+        <!-- Container Fluid-->
+        <div class="container-fluid" id="container-wrapper">
+          <div class="d-sm-flex align-items-center justify-content-between mb-4">
+            <h1 class="h3 mb-0 text-gray-800">Départs</h1>
+            <ol class="breadcrumb">
+              <li class="breadcrumb-item"><a href="/">Home</a></li>
+              <li class="breadcrumb-item">Réservations</li>
+              <li class="breadcrumb-item active" aria-current="page">Départs</li>
+            </ol>
+          </div>
+
+          <div class="row">
+            <!-- Formulaire de recherche -->
+            <div class="col-lg-12 mb-4">
+              <div class="card">
+                <div class="card-header py-3 bg-primary">
+                  <h6 class="m-0 font-weight-bold text-white">
+                    <i class="fas fa-search mr-2"></i>Recherche Multi-Critères
+                  </h6>
+                </div>
+                <div class="card-body">
+                  <form action="/departs" method="get">
+                    <div class="row">
+                      <div class="col-md-3 mb-3">
+                        <label for="lieuDepartId" class="form-label">Lieu de Départ</label>
+                        <select class="form-control" id="lieuDepartId" name="lieuDepartId">
+                          <option value="">Tous les lieux</option>
+                          <option th:each="lieu : ${lieux}" 
+                                  th:value="${lieu.id}" 
+                                  th:text="${lieu.nom}"
+                                  th:selected="${param.lieuDepartId != null and param.lieuDepartId[0] == lieu.id.toString()}">
+                            Lieu
+                          </option>
+                        </select>
+                      </div>
+                      <div class="col-md-3 mb-3">
+                        <label for="lieuArriveeId" class="form-label">Lieu d'Arrivée</label>
+                        <select class="form-control" id="lieuArriveeId" name="lieuArriveeId">
+                          <option value="">Tous les lieux</option>
+                          <option th:each="lieu : ${lieux}" 
+                                  th:value="${lieu.id}" 
+                                  th:text="${lieu.nom}"
+                                  th:selected="${param.lieuArriveeId != null and param.lieuArriveeId[0] == lieu.id.toString()}">
+                            Lieu
+                          </option>
+                        </select>
+                      </div>
+                      <div class="col-md-3 mb-3">
+                        <label for="cooperativeId" class="form-label">Coopérative</label>
+                        <select class="form-control" id="cooperativeId" name="cooperativeId">
+                          <option value="">Toutes les coopératives</option>
+                          <option th:each="coop : ${cooperatives}" 
+                                  th:value="${coop.id}" 
+                                  th:text="${coop.nom}"
+                                  th:selected="${param.cooperativeId != null and param.cooperativeId[0] == coop.id.toString()}">
+                            Coopérative
+                          </option>
+                        </select>
+                      </div>
+                      <div class="col-md-3 mb-3">
+                        <label for="dateDebut" class="form-label">Date Début</label>
+                        <input type="date" class="form-control" id="dateDebut" name="dateDebut" 
+                               th:value="${param.dateDebut != null ? param.dateDebut[0] : ''}">
+                      </div>
+                    </div>
+                    <div class="row">
+                      <div class="col-md-3 mb-3">
+                        <label for="dateFin" class="form-label">Date Fin</label>
+                        <input type="date" class="form-control" id="dateFin" name="dateFin"
+                               th:value="${param.dateFin != null ? param.dateFin[0] : ''}">
+                      </div>
+                      <div class="col-md-3 mb-3">
+                        <label for="statutId" class="form-label">Statut</label>
+                        <select class="form-control" id="statutId" name="statutId">
+                          <option value="">Tous les statuts</option>
+                          <option th:each="statut : ${statuts}" 
+                                  th:value="${statut.id}" 
+                                  th:text="${statut.libelle}"
+                                  th:selected="${param.statutId != null and param.statutId[0] == statut.id.toString()}">
+                            Statut
+                          </option>
+                        </select>
+                      </div>
+                      <div class="col-md-3 mb-3">
+                        <label for="trajetId" class="form-label">Trajet</label>
+                        <select class="form-control" id="trajetId" name="trajetId">
+                          <option value="">Tous les trajets</option>
+                          <option th:each="trajet : ${trajets}" 
+                                  th:value="${trajet.id}" 
+                                  th:text="${trajet.libelle}"
+                                  th:selected="${param.trajetId != null and param.trajetId[0] == trajet.id.toString()}">
+                            Trajet
+                          </option>
+                        </select>
+                      </div>
+                      <div class="col-md-3 mb-3 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary mr-2">
+                          <i class="fas fa-search mr-1"></i>Rechercher
+                        </button>
+                        <a href="/departs" class="btn btn-secondary">
+                          <i class="fas fa-redo mr-1"></i>Réinitialiser
+                        </a>
+                      </div>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </div>
+            
+            <div class="col-lg-12 mb-4">
+              <!-- Départs Table -->
+              <div class="card">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                  <h6 class="m-0 font-weight-bold text-primary">
+                    Liste des Départs
+                    <span class="badge badge-info ml-2" th:text="${#lists.size(departs)}">0</span>
+                  </h6>
+                  <button class="btn btn-primary btn-sm" data-toggle="modal" data-target="#departModal" onclick="openDepartModal()">
+                    <i class="fas fa-plus"></i> Nouveau Départ
+                  </button>
+                </div>
+                <div class="table-responsive">
+                  <table class="table align-items-center table-flush table-hover">
+                    <thead class="thead-light">
+                      <tr>
+                        <th>ID</th>
+                        <th>Code</th>
+                        <th>Trajet</th>
+                        <th>Lieu départ</th>
+                        <th>Lieu arrivée</th>
+                        <th>Véhicule</th>
+                        <th>Date/Heure Départ</th>
+                        <th>Arrivée Estimée</th>
+                        <th>Chiffre d'affaires</th>
+                        <th>Montant pubs</th>
+                        <th>Paiements par société</th>
+                        <th>Reste à payer par société</th>
+                        <th>CA maximale</th>
+                        <th>Total CA max + pubs</th>
+                        <th>Total réel (pubs + CA)</th>
+                        <th>Statut</th>
+                        <th style="width: 180px;">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr th:each="depart : ${departs}">
+                        <td th:text="${depart.id}">1</td>
+                        <td><strong th:text="${depart.code}">DEP001</strong></td>
+                        <td th:text="${depart.trajetLibelle != null ? depart.trajetLibelle : 'N/A'}">Antananarivo - Toamasina</td>
+                        <td th:text="${depart.lieuDepartNom != null ? depart.lieuDepartNom : 'N/A'}">Antananarivo</td>
+                        <td th:text="${depart.lieuArriveeNom != null ? depart.lieuArriveeNom : 'N/A'}">Toamasina</td>
+                        <td th:text="${depart.vehiculeImmatriculation != null ? depart.vehiculeImmatriculation : 'N/A'}">1234 TAA</td>
+                        <td th:text="${depart.dateHeureDepart != null ? #temporals.format(depart.dateHeureDepart, 'dd/MM/yyyy HH:mm') : 'N/A'}">
+                          10/01/2026 08:00
+                        </td>
+                        <td th:text="${depart.dateHeureArriveeEstimee != null ? #temporals.format(depart.dateHeureArriveeEstimee, 'dd/MM/yyyy HH:mm') : '-'}">
+                          -
+                        </td>
+                        <td>
+                          <strong class="text-success" th:text="${depart.chiffreAffaires != null ? #numbers.formatDecimal(depart.chiffreAffaires, 0, 'COMMA', 2, 'POINT') + ' Ar' : '0.00 Ar'}">0.00 Ar</strong>
+                        </td>
+                        <td>
+                          <strong class="text-primary" th:text="${depart.montantDiffusionsPublicite != null ? #numbers.formatDecimal(depart.montantDiffusionsPublicite, 0, 'COMMA', 2, 'POINT') + ' ' + (depart.montantDiffusionsPubliciteDeviseSymbole != null ? depart.montantDiffusionsPubliciteDeviseSymbole : (depart.montantDiffusionsPubliciteDeviseCode != null ? depart.montantDiffusionsPubliciteDeviseCode : '')) : '0.00'}">0.00</strong>
+                        </td>
+                        <td>
+                          <div th:if="${depart.paiementsParSociete != null && !depart.paiementsParSociete.isEmpty()}">
+                            <div th:each="ps : ${depart.paiementsParSociete}" style="margin-bottom: 5px;">
+                              <small>
+                                <strong th:text="${ps.societeNom}">Société</strong>: 
+                                <span class="text-success" th:text="${#numbers.formatDecimal(ps.montantPaye, 0, 'COMMA', 2, 'POINT') + ' ' + ps.deviseSymbole}">0 Ar</span>
+                              </small>
+                            </div>
+                          </div>
+                          <span th:if="${depart.paiementsParSociete == null || depart.paiementsParSociete.isEmpty()}" class="text-muted">-</span>
+                        </td>
+                        <td>
+                          <div th:if="${depart.paiementsParSociete != null && !depart.paiementsParSociete.isEmpty()}">
+                            <div th:each="ps : ${depart.paiementsParSociete}" style="margin-bottom: 5px;">
+                              <small>
+                                <strong th:text="${ps.societeNom}">Société</strong>: 
+                                <span class="text-warning" th:text="${#numbers.formatDecimal(ps.montantRestant, 0, 'COMMA', 2, 'POINT') + ' ' + ps.deviseSymbole}">0 Ar</span>
+                              </small>
+                            </div>
+                          </div>
+                          <span th:if="${depart.paiementsParSociete == null || depart.paiementsParSociete.isEmpty()}" class="text-muted">-</span>
+                        </td>
+                        <td>
+                          <strong class="text-info" th:text="${depart.chiffreAffairesMax != null ? #numbers.formatDecimal(depart.chiffreAffairesMax, 0, 'COMMA', 2, 'POINT') + ' ' + (depart.chiffreAffairesMaxDeviseSymbole != null ? depart.chiffreAffairesMaxDeviseSymbole : (depart.chiffreAffairesMaxDeviseCode != null ? depart.chiffreAffairesMaxDeviseCode : '')) : '0.00'}">0.00</strong>
+                        </td>
+                        <td>
+                          <strong class="text-dark" th:text="${#numbers.formatDecimal((depart.chiffreAffairesMax != null ? depart.chiffreAffairesMax : 0) + (depart.montantDiffusionsPublicite != null ? depart.montantDiffusionsPublicite : 0), 0, 'COMMA', 2, 'POINT') + ' ' + (depart.chiffreAffairesMaxDeviseSymbole != null ? depart.chiffreAffairesMaxDeviseSymbole : (depart.chiffreAffairesMaxDeviseCode != null ? depart.chiffreAffairesMaxDeviseCode : (depart.montantDiffusionsPubliciteDeviseSymbole != null ? depart.montantDiffusionsPubliciteDeviseSymbole : (depart.montantDiffusionsPubliciteDeviseCode != null ? depart.montantDiffusionsPubliciteDeviseCode : ''))))}">0.00</strong>
+                        </td>
+                        <td>
+                          <strong class="text-secondary" th:text="${#numbers.formatDecimal((depart.chiffreAffaires != null ? depart.chiffreAffaires : 0) + (depart.montantDiffusionsPublicite != null ? depart.montantDiffusionsPublicite : 0), 0, 'COMMA', 2, 'POINT') + ' ' + (depart.montantDiffusionsPubliciteDeviseSymbole != null ? depart.montantDiffusionsPubliciteDeviseSymbole : (depart.montantDiffusionsPubliciteDeviseCode != null ? depart.montantDiffusionsPubliciteDeviseCode : 'Ar'))}">0.00</strong>
+                        </td>
+                        <td>
+                          <span class="badge" 
+                                th:if="${depart.refDepartStatutCode != null}"
+                                th:classappend="${depart.refDepartStatutCode == 'TERMINE' ? 'badge-success' : 
+                                                (depart.refDepartStatutCode == 'EN_COURS' ? 'badge-info' : 
+                                                (depart.refDepartStatutCode == 'ANNULE' ? 'badge-danger' : 'badge-warning'))}"
+                                th:text="${depart.refDepartStatutLibelle}">Planifié</span>
+                        </td>
+                        <td class="text-nowrap">
+                          <a href="#" class="btn btn-sm btn-info" title="Voir" 
+                             th:attr="data-id=${depart.id}" onclick="viewDepart(event, this.getAttribute('data-id'))">
+                            <i class="fas fa-eye"></i>
+                          </a>
+                          <a href="#" class="btn btn-sm btn-warning" title="Modifier" 
+                             th:attr="data-id=${depart.id}" onclick="editDepart(event, this.getAttribute('data-id'))">
+                            <i class="fas fa-edit"></i>
+                          </a>
+                          <a href="#" class="btn btn-sm btn-danger" title="Supprimer" 
+                             th:attr="data-id=${depart.id}" onclick="confirmDeleteDepart(event, this.getAttribute('data-id'))">
+                            <i class="fas fa-trash"></i>
+                          </a>
+                        </td>
+                      </tr>
+                      <tr th:if="${#lists.isEmpty(departs)}">
+                        <td colspan="14" class="text-center text-muted">Aucun départ enregistré</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+                <div class="card-foot8r"></div>
+              </div>
+            </div>
+          </div>
+          <!--Row-->
+
+          <!-- Modal Création/Modification Départ -->
+          <div class="modal fade" id="departModal" tabindex="-1" role="dialog" aria-labelledby="departModalLabel"
+            aria-hidden="true">
+            <div class="modal-dialog modal-lg" role="document">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title" id="departModalLabel">Nouveau Départ</h5>
+                  <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                  </button>
+                </div>
+                <div class="modal-body">
+                  <form id="departForm">
+                    <input type="hidden" id="departId">
+                    
+                    <div class="row">
+                      <div class="col-md-6 mb-3">
+                        <label for="formCooperativeId" class="form-label">Coopérative *</label>
+                        <select class="form-control" id="formCooperativeId" required>
+                          <option value="">Sélectionner une coopérative</option>
+                        </select>
+                        <div class="invalid-feedback">Veuillez sélectionner une coopérative</div>
+                      </div>
+                      <div class="col-md-6 mb-3">
+                        <label for="formTrajetId" class="form-label">Trajet *</label>
+                        <select class="form-control" id="formTrajetId" required>
+                          <option value="">Sélectionner un trajet</option>
+                        </select>
+                        <div class="invalid-feedback">Veuillez sélectionner un trajet</div>
+                      </div>
+                    </div>
+                    
+                    <div class="row">
+                      <div class="col-md-6 mb-3">
+                        <label for="formVehiculeId" class="form-label">Véhicule *</label>
+                        <select class="form-control" id="formVehiculeId" required>
+                          <option value="">Sélectionner un véhicule</option>
+                        </select>
+                        <div class="invalid-feedback">Veuillez sélectionner un véhicule</div>
+                      </div>
+                      <div class="col-md-6 mb-3">
+                        <label for="formStatutId" class="form-label">Statut *</label>
+                        <select class="form-control" id="formStatutId" required>
+                          <option value="">Sélectionner un statut</option>
+                        </select>
+                        <div class="invalid-feedback">Veuillez sélectionner un statut</div>
+                      </div>
+                    </div>
+
+                    <div class="row">
+                      <div class="col-md-6 mb-3">
+                        <label for="formLieuDepartId" class="form-label">Lieu Départ *</label>
+                        <select class="form-control" id="formLieuDepartId" required>
+                          <option value="">Sélectionner un lieu</option>
+                        </select>
+                        <div class="invalid-feedback">Veuillez sélectionner un lieu de départ</div>
+                      </div>
+                      <div class="col-md-6 mb-3">
+                        <label for="formLieuArriveeId" class="form-label">Lieu Arrivée *</label>
+                        <select class="form-control" id="formLieuArriveeId" required>
+                          <option value="">Sélectionner un lieu</option>
+                        </select>
+                        <div class="invalid-feedback">Veuillez sélectionner un lieu d'arrivée</div>
+                      </div>
+                    </div>
+
+                    <div class="row">
+                      <div class="col-md-6 mb-3">
+                        <label for="formDateHeureDepart" class="form-label">Date/Heure Départ *</label>
+                        <input type="datetime-local" class="form-control" id="formDateHeureDepart" required>
+                        <div class="invalid-feedback">Veuillez sélectionner une date/heure de départ</div>
+                      </div>
+                      <div class="col-md-6 mb-3">
+                        <label for="formDateHeureArriveeEstimee" class="form-label">Date/Heure Arrivée Estimée</label>
+                        <input type="datetime-local" class="form-control" id="formDateHeureArriveeEstimee">
+                      </div>
+                    </div>
+
+                    <div class="row">
+                      <div class="col-md-6 mb-3">
+                        <label for="formCapaciteOverride" class="form-label">Capacité Override</label>
+                        <input type="number" class="form-control" id="formCapaciteOverride" min="1" 
+                               placeholder="Laisser vide pour utiliser la capacité du véhicule">
+                        <small class="form-text text-muted">Si vide, la capacité du véhicule sera utilisée</small>
+                      </div>
+                    </div>
+                    <div class="row">
+                      <div class="col-md-12 mb-3">
+                        <label class="form-label">Tarifs par catégorie de siège</label>
+                        <div id="departSeatTarifs" class="border rounded p-2 bg-light"></div>
+                        <small class="form-text text-muted">Définir le prix par catégorie pour ce départ.</small>
+                      </div>
+                    </div>
+                  </form>
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuler</button>
+                  <button type="button" class="btn btn-primary" onclick="saveDepart()">
+                    <i class="fas fa-save"></i> Enregistrer
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Modal Visualisation Départ -->
+          <div class="modal fade" id="viewDepartModal" tabindex="-1" role="dialog" aria-labelledby="viewDepartModalLabel"
+            aria-hidden="true">
+            <div class="modal-dialog modal-lg" role="document">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title" id="viewDepartModalLabel">Détails du Départ</h5>
+                  <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                  </button>
+                </div>
+                <div class="modal-body">
+                  <div class="row">
+                    <div class="col-md-12 mb-3">
+                      <h6 class="font-weight-bold text-primary">Informations Générales</h6>
+                      <hr>
+                    </div>
+                  </div>
+                  <div class="row">
+                    <div class="col-md-4 mb-2">
+                      <strong>Code:</strong><br>
+                      <span id="viewCode" class="text-muted">-</span>
+                    </div>
+                    <div class="col-md-4 mb-2">
+                      <strong>Coopérative:</strong><br>
+                      <span id="viewCooperative" class="text-muted">-</span>
+                    </div>
+                    <div class="col-md-4 mb-2">
+                      <strong>Statut:</strong><br>
+                      <span id="viewStatut" class="badge">-</span>
+                    </div>
+                  </div>
+                  
+                  <div class="row mt-3">
+                    <div class="col-md-12 mb-3">
+                      <h6 class="font-weight-bold text-primary">Trajet et Véhicule</h6>
+                      <hr>
+                    </div>
+                  </div>
+                  <div class="row">
+                    <div class="col-md-6 mb-2">
+                      <strong>Trajet:</strong><br>
+                      <span id="viewTrajet" class="text-muted">-</span>
+                    </div>
+                    <div class="col-md-6 mb-2">
+                      <strong>Véhicule:</strong><br>
+                      <span id="viewVehicule" class="text-muted">-</span>
+                    </div>
+                  </div>
+                  <div class="row">
+                    <div class="col-md-6 mb-2">
+                      <strong>Lieu Départ:</strong><br>
+                      <span id="viewLieuDepart" class="text-muted">-</span>
+                    </div>
+                    <div class="col-md-6 mb-2">
+                      <strong>Lieu Arrivée:</strong><br>
+                      <span id="viewLieuArrivee" class="text-muted">-</span>
+                    </div>
+                  </div>
+                  
+                  <div class="row mt-3">
+                    <div class="col-md-12 mb-3">
+                      <h6 class="font-weight-bold text-primary">Horaires</h6>
+                      <hr>
+                    </div>
+                  </div>
+                  <div class="row">
+                    <div class="col-md-6 mb-2">
+                      <strong>Date/Heure Départ:</strong><br>
+                      <span id="viewDateHeureDepart" class="text-muted">-</span>
+                    </div>
+                    <div class="col-md-6 mb-2">
+                      <strong>Date/Heure Arrivée Estimée:</strong><br>
+                      <span id="viewDateHeureArriveeEstimee" class="text-muted">-</span>
+                    </div>
+                  </div>
+                  
+                  <div class="row mt-3">
+                    <div class="col-md-12 mb-3">
+                      <h6 class="font-weight-bold text-primary">Capacité et Chiffre d'Affaires</h6>
+                      <hr>
+                    </div>
+                  </div>
+                  <div class="row">
+                    <div class="col-md-3 mb-2">
+                      <strong>Capacité:</strong><br>
+                      <span id="viewNombrePlaces" class="badge badge-secondary">-</span>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                      <strong>Places Occupées:</strong><br>
+                      <span id="viewPlacesOccupees" class="badge badge-warning">-</span>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                      <strong>Places Disponibles:</strong><br>
+                      <span id="viewPlacesDisponibles" class="badge badge-success">-</span>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                      <strong>Chiffre d'Affaires:</strong><br>
+                      <span id="viewChiffreAffaires" class="badge badge-info">-</span>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                      <strong>Montant pubs:</strong><br>
+                      <span id="viewMontantPubs" class="badge badge-primary">-</span>
+                    </div>
+                  </div>
+                  <div class="row mt-2">
+                    <div class="col-md-12 mb-2">
+                      <strong>Tarifs par catégorie:</strong><br>
+                      <ul id="viewDepartTarifsSieges" class="mb-0"></ul>
+                    </div>
+                  </div>
+                  <div class="row mt-2">
+                    <div class="col-md-12 mb-2">
+                      <strong>Chiffre d'affaires par catégorie:</strong><br>
+                      <ul id="viewChiffreAffairesParCategorie" class="mb-0"></ul>
+                    </div>
+                  </div>
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary" data-dismiss="modal">Fermer</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Modal Confirmation Suppression -->
+          <div class="modal fade" id="deleteDepartModal" tabindex="-1" role="dialog" aria-labelledby="deleteDepartModalLabel"
+            aria-hidden="true">
+            <div class="modal-dialog" role="document">
+              <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                  <h5 class="modal-title" id="deleteDepartModalLabel">Confirmer la Suppression</h5>
+                  <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                  </button>
+                </div>
+                <div class="modal-body">
+                  <p><i class="fas fa-exclamation-triangle text-warning fa-2x mb-3"></i></p>
+                  <p>Êtes-vous sûr de vouloir supprimer ce départ?</p>
+                  <p class="text-muted">Cette action est irréversible. Le départ <strong id="deleteCode"></strong> sera définitivement supprimé.</p>
+                  <p class="text-danger"><small>Note: Les départs avec des réservations existantes ne peuvent pas être supprimés.</small></p>
+                  <input type="hidden" id="deleteDepartId">
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuler</button>
+                  <button type="button" class="btn btn-danger" onclick="deleteDepart()">
+                    <i class="fas fa-trash"></i> Supprimer
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Modal Logout -->
+          <div class="modal fade" id="logoutModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabelLogout"
+            aria-hidden="true">
+            <div class="modal-dialog" role="document">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title" id="exampleModalLabelLogout">Confirmation</h5>
+                  <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                  </button>
+                </div>
+                <div class="modal-body">
+                  <p>Voulez-vous vraiment vous déconnecter?</p>
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-outline-primary" data-dismiss="modal">Annuler</button>
+                  <a href="/" class="btn btn-primary">Se déconnecter</a>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+        <!---Container Fluid-->
+      </div>
+      <!-- Footer -->
+      <footer class="sticky-footer bg-white">
+        <div class="container my-auto">
+          <div class="copyright text-center my-auto">
+            <span>copyright &copy; <script> document.write(new Date().getFullYear()); </script> - Gestion Taxi Brousse
+            </span>
+          </div>
+        </div>
+      </footer>
+      <!-- Footer -->
+    </div>
+  </div>
+
+  <!-- Scroll to top -->
+  <a class="scroll-to-top rounded" href="#page-top">
+    <i class="fas fa-angle-up"></i>
+  </a>
+
+  <script src="vendor/jquery/jquery.min.js"></script>
+  <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <script src="vendor/jquery-easing/jquery.easing.min.js"></script>
+  <script src="js/ruang-admin.min.js"></script>
+
+  <script>
+    // Variables globales
+    let cooperatives = [];
+    let trajets = [];
+    let vehicules = [];
+    let lieux = [];
+    let statuts = [];
+    let seatCategories = [];
+    let devises = [];
+
+    // Chargement initial
+    $(document).ready(function() {
+      loadReferenceData();
+    });
+
+    // Chargement des données de référence
+    function loadReferenceData() {
+      // Charger les coopératives
+      $.get('/api/cooperatives', function(data) {
+        cooperatives = data;
+        populateSelect('#formCooperativeId', data, 'nom');
+      }).fail(function() {
+        console.error('Erreur lors du chargement des coopératives');
+      });
+
+      // Charger les trajets
+      $.get('/api/trajets', function(data) {
+        trajets = data;
+        populateSelect('#formTrajetId', data, 'libelle');
+      }).fail(function() {
+        console.error('Erreur lors du chargement des trajets');
+      });
+
+      // Charger les véhicules
+      $.get('/api/vehicules', function(data) {
+        vehicules = data;
+        populateSelect('#formVehiculeId', data, 'immatriculation');
+      }).fail(function() {
+        console.error('Erreur lors du chargement des véhicules');
+      });
+
+      // Charger les catégories de sièges
+      $.get('/api/reference/siege-categories', function(data) {
+        seatCategories = data || [];
+        renderDepartSeatTarifs();
+      }).fail(function() {
+        console.error('Erreur lors du chargement des catégories de sièges');
+      });
+
+      // Charger les devises
+      $.get('/api/reference/devises', function(data) {
+        devises = data || [];
+        renderDepartSeatTarifs();
+      }).fail(function() {
+        console.error('Erreur lors du chargement des devises');
+      });
+
+      // Charger les lieux
+      $.get('/api/lieux', function(data) {
+        lieux = data;
+        populateSelect('#formLieuDepartId', data, 'nom');
+        populateSelect('#formLieuArriveeId', data, 'nom');
+      }).fail(function() {
+        console.error('Erreur lors du chargement des lieux');
+      });
+
+      // Charger les statuts
+      $.get('/api/reference/depart-statuts', function(data) {
+        statuts = data;
+        populateSelect('#formStatutId', data, 'libelle');
+      }).fail(function() {
+        console.error('Erreur lors du chargement des statuts');
+      });
+
+      $('#formVehiculeId').off('change').on('change', function() {
+        renderDepartSeatTarifs();
+      });
+    }
+
+    function renderDepartSeatTarifs(existingTarifs) {
+      const container = $('#departSeatTarifs');
+      container.empty();
+
+      if (!seatCategories || seatCategories.length === 0) {
+        container.html('<div class="text-muted">Aucune catégorie de siège configurée</div>');
+        return;
+      }
+
+      const tarifsMap = {};
+      (existingTarifs || []).forEach(t => {
+        tarifsMap[t.refSiegeCategorieId] = t;
+      });
+
+      const deviseOptions = devises.map(d => `<option value="${d.id}">${d.code}</option>`).join('');
+
+      seatCategories.forEach(cat => {
+        const tarif = tarifsMap[cat.id];
+        const montant = tarif && tarif.montant ? tarif.montant : '';
+        const deviseId = tarif && tarif.refDeviseId ? tarif.refDeviseId : (devises[0] ? devises[0].id : '');
+
+        container.append(`
+          <div class="form-row align-items-center mb-2">
+            <div class="col-md-4"><strong>${cat.libelle}</strong></div>
+            <div class="col-md-4">
+              <input type="number" class="form-control depart-tarif-montant" data-category-id="${cat.id}" min="1" value="${montant}">
+            </div>
+            <div class="col-md-4">
+              <select class="form-control depart-tarif-devise" data-category-id="${cat.id}">
+                ${deviseOptions}
+              </select>
+            </div>
+          </div>
+        `);
+
+        if (deviseId) {
+          container.find(`.depart-tarif-devise[data-category-id="${cat.id}"]`).val(deviseId);
+        }
+      });
+    }
+
+    // Remplir un select avec des données
+    function populateSelect(selector, data, labelField) {
+      const select = $(selector);
+      const placeholder = select.find('option:first');
+      select.empty().append(placeholder);
+      
+      data.forEach(item => {
+        select.append($('<option></option>')
+          .attr('value', item.id)
+          .text(item[labelField]));
+      });
+    }
+
+    // Ouvrir le modal de création
+    function openDepartModal() {
+      $('#departModalLabel').text('Nouveau Départ');
+      $('#departId').val('');
+      $('#departForm')[0].reset();
+      $('#departForm').removeClass('was-validated');
+      loadReferenceData();
+      renderDepartSeatTarifs([]);
+    }
+
+    // Voir les détails d'un départ
+    function viewDepart(event, departId) {
+      event.preventDefault();
+      
+      $.get('/api/departs/' + departId, function(depart) {
+        $('#viewCode').text(depart.code || '-');
+        $('#viewCooperative').text(depart.cooperativeNom || '-');
+        $('#viewTrajet').text(depart.trajetLibelle || '-');
+        $('#viewVehicule').text(depart.vehiculeImmatriculation || '-');
+        $('#viewLieuDepart').text(depart.lieuDepartNom || '-');
+        $('#viewLieuArrivee').text(depart.lieuArriveeNom || '-');
+        
+        // Formater les dates
+        if (depart.dateHeureDepart) {
+          const dateDepart = new Date(depart.dateHeureDepart);
+          $('#viewDateHeureDepart').text(dateDepart.toLocaleString('fr-FR'));
+        } else {
+          $('#viewDateHeureDepart').text('-');
+        }
+        
+        if (depart.dateHeureArriveeEstimee) {
+          const dateArrivee = new Date(depart.dateHeureArriveeEstimee);
+          $('#viewDateHeureArriveeEstimee').text(dateArrivee.toLocaleString('fr-FR'));
+        } else {
+          $('#viewDateHeureArriveeEstimee').text('-');
+        }
+        
+        // Statut avec badge coloré
+        let statutBadgeClass = 'badge-secondary';
+        if (depart.refDepartStatutCode === 'TERMINE') statutBadgeClass = 'badge-success';
+        else if (depart.refDepartStatutCode === 'EN_COURS') statutBadgeClass = 'badge-info';
+        else if (depart.refDepartStatutCode === 'ANNULE') statutBadgeClass = 'badge-danger';
+        else if (depart.refDepartStatutCode === 'PROGRAMME') statutBadgeClass = 'badge-warning';
+        
+        $('#viewStatut').removeClass().addClass('badge ' + statutBadgeClass)
+          .text(depart.refDepartStatutLibelle || '-');
+        
+        // Capacité et places
+        $('#viewNombrePlaces').text(depart.nombrePlaces || '-');
+        $('#viewPlacesOccupees').text(depart.placesOccupees || '0');
+        $('#viewPlacesDisponibles').text(depart.placesDisponibles || '-');
+        
+        // Chiffre d'affaires
+        const ca = depart.chiffreAffaires || 0;
+        $('#viewChiffreAffaires').text(ca.toLocaleString('fr-FR', {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2
+        }) + ' Ar');
+
+        // Montant diffusions publicitaires
+        const montantPubs = depart.montantDiffusionsPublicite || 0;
+        const devisePubs = depart.montantDiffusionsPubliciteDeviseSymbole || depart.montantDiffusionsPubliciteDeviseCode || 'Ar';
+        $('#viewMontantPubs').text(montantPubs.toLocaleString('fr-FR', {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2
+        }) + ' ' + devisePubs);
+
+        const tarifsSieges = depart.tarifsSieges || [];
+        if (tarifsSieges.length === 0) {
+          $('#viewDepartTarifsSieges').html('<li class="text-muted">Aucun tarif configuré</li>');
+        } else {
+          $('#viewDepartTarifsSieges').html(tarifsSieges.map(t => `
+            <li>${t.refSiegeCategorieLibelle || t.refSiegeCategorieCode} : ${t.montant} ${t.deviseCode || ''}</li>
+          `).join(''));
+        }
+
+        const caParCategorie = depart.chiffreAffairesParCategorie || [];
+        if (caParCategorie.length === 0) {
+          $('#viewChiffreAffairesParCategorie').html('<li class="text-muted">Aucune donnée</li>');
+        } else {
+          $('#viewChiffreAffairesParCategorie').html(caParCategorie.map(c => {
+            const libelle = c.refSiegeCategorieLibelle || c.refSiegeCategorieCode || 'Catégorie';
+            const nb = c.nbPassagers || 0;
+            const montant = c.montantTotal || 0;
+            const devise = c.deviseSymbole || c.deviseCode || 'Ar';
+            const montantLabel = Number(montant).toLocaleString('fr-FR', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+            return `<li>${libelle} : ${nb} passager(s) : ${montantLabel} ${devise}</li>`;
+          }).join(''));
+        }
+        
+        $('#viewDepartModal').modal('show');
+      }).fail(function(xhr) {
+        alert('Erreur lors du chargement des détails: ' + (xhr.responseJSON?.message || 'Erreur inconnue'));
+      });
+    }
+
+    // Modifier un départ
+    function editDepart(event, departId) {
+      event.preventDefault();
+      
+      $.get('/api/departs/' + departId, function(depart) {
+        $('#departModalLabel').text('Modifier le Départ');
+        $('#departId').val(depart.id);
+        $('#formCooperativeId').val(depart.cooperativeId);
+        $('#formTrajetId').val(depart.trajetId);
+        $('#formVehiculeId').val(depart.vehiculeId);
+        $('#formLieuDepartId').val(depart.lieuDepartId);
+        $('#formLieuArriveeId').val(depart.lieuArriveeId);
+        $('#formStatutId').val(depart.refDepartStatutId);
+        
+        // Formater les dates pour datetime-local (format: yyyy-MM-ddTHH:mm)
+        if (depart.dateHeureDepart) {
+          const dateDepart = new Date(depart.dateHeureDepart);
+          $('#formDateHeureDepart').val(formatDateTimeLocal(dateDepart));
+        }
+        
+        if (depart.dateHeureArriveeEstimee) {
+          const dateArrivee = new Date(depart.dateHeureArriveeEstimee);
+          $('#formDateHeureArriveeEstimee').val(formatDateTimeLocal(dateArrivee));
+        }
+        
+        $('#formCapaciteOverride').val(depart.capaciteOverride || '');
+
+        $.get(`/api/departs/${departId}/tarifs-sieges`, function(tarifs) {
+          renderDepartSeatTarifs(tarifs);
+          $('#departModal').modal('show');
+        }).fail(function() {
+          renderDepartSeatTarifs([]);
+          $('#departModal').modal('show');
+        });
+      }).fail(function(xhr) {
+        alert('Erreur lors du chargement du départ: ' + (xhr.responseJSON?.message || 'Erreur inconnue'));
+      });
+    }
+
+    // Formater une date pour datetime-local input
+    function formatDateTimeLocal(date) {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      const hours = String(date.getHours()).padStart(2, '0');
+      const minutes = String(date.getMinutes()).padStart(2, '0');
+      return `${year}-${month}-${day}T${hours}:${minutes}`;
+    }
+
+    // Enregistrer un départ (création ou modification)
+    function saveDepart() {
+      const form = $('#departForm')[0];
+      
+      // Validation HTML5
+      if (!form.checkValidity()) {
+        form.classList.add('was-validated');
+        return;
+      }
+      
+      const departId = $('#departId').val();
+      
+      // Ajouter les secondes si elles sont manquantes
+      let dateHeureDepart = $('#formDateHeureDepart').val();
+      if (dateHeureDepart && dateHeureDepart.length === 16) {
+        dateHeureDepart += ':00';
+      }
+      
+      let dateHeureArriveeEstimee = $('#formDateHeureArriveeEstimee').val();
+      if (dateHeureArriveeEstimee && dateHeureArriveeEstimee.length === 16) {
+        dateHeureArriveeEstimee += ':00';
+      }
+      
+      const departData = {
+        cooperativeId: parseInt($('#formCooperativeId').val()),
+        trajetId: parseInt($('#formTrajetId').val()),
+        vehiculeId: parseInt($('#formVehiculeId').val()),
+        lieuDepartId: parseInt($('#formLieuDepartId').val()),
+        lieuArriveeId: parseInt($('#formLieuArriveeId').val()),
+        refDepartStatutId: parseInt($('#formStatutId').val()),
+        dateHeureDepart: dateHeureDepart,
+        dateHeureArriveeEstimee: dateHeureArriveeEstimee || null,
+        capaciteOverride: $('#formCapaciteOverride').val() ? parseInt($('#formCapaciteOverride').val()) : null
+      };
+      
+      const method = departId ? 'PUT' : 'POST';
+      const url = departId ? '/api/departs/' + departId : '/api/departs';
+      
+      $.ajax({
+        url: url,
+        type: method,
+        contentType: 'application/json',
+        data: JSON.stringify(departData),
+        success: function(response) {
+          const savedId = response && response.id ? response.id : departId;
+          const tarifs = collectDepartTarifs(savedId);
+
+          if (tarifs.length > 0) {
+            $.ajax({
+              url: `/api/departs/${savedId}/tarifs-sieges`,
+              type: 'PUT',
+              contentType: 'application/json',
+              data: JSON.stringify(tarifs),
+              complete: function() {
+                $('#departModal').modal('hide');
+                alert('Départ ' + (departId ? 'modifié' : 'créé') + ' avec succès!');
+                location.reload();
+              }
+            });
+          } else {
+            $('#departModal').modal('hide');
+            alert('Départ ' + (departId ? 'modifié' : 'créé') + ' avec succès!');
+            location.reload();
+          }
+        },
+        error: function(xhr) {
+          console.error('Erreur détaillée:', xhr.responseJSON);
+          let errorMsg = 'Erreur lors de l\'enregistrement';
+          if (xhr.responseJSON) {
+            if (xhr.responseJSON.message) {
+              errorMsg = xhr.responseJSON.message;
+            }
+            if (xhr.responseJSON.errors) {
+              errorMsg += '\n\nDétails:\n' + Object.entries(xhr.responseJSON.errors)
+                .map(([field, msg]) => `- ${field}: ${msg}`)
+                .join('\n');
+            }
+          }
+          alert('Erreur: ' + errorMsg);
+        }
+      });
+    }
+
+    function collectDepartTarifs(departId) {
+      const tarifs = [];
+      $('.depart-tarif-montant').each(function() {
+        const categoryId = parseInt($(this).data('category-id'));
+        const montant = parseFloat($(this).val());
+        const deviseId = parseInt($(`.depart-tarif-devise[data-category-id="${categoryId}"]`).val());
+
+        if (montant && deviseId) {
+          tarifs.push({
+            departId: departId,
+            refSiegeCategorieId: categoryId,
+            refDeviseId: deviseId,
+            montant: montant
+          });
+        }
+      });
+      return tarifs;
+    }
+
+    // Confirmer la suppression
+    function confirmDeleteDepart(event, departId) {
+      event.preventDefault();
+      
+      $.get('/api/departs/' + departId, function(depart) {
+        $('#deleteDepartId').val(departId);
+        $('#deleteCode').text(depart.code);
+        $('#deleteDepartModal').modal('show');
+      }).fail(function(xhr) {
+        alert('Erreur lors du chargement du départ: ' + (xhr.responseJSON?.message || 'Erreur inconnue'));
+      });
+    }
+
+    // Supprimer un départ
+    function deleteDepart() {
+      const departId = $('#deleteDepartId').val();
+      
+      $.ajax({
+        url: '/api/departs/' + departId,
+        type: 'DELETE',
+        success: function() {
+          $('#deleteDepartModal').modal('hide');
+          alert('Départ supprimé avec succès!');
+          location.reload();
+        },
+        error: function(xhr) {
+          const errorMsg = xhr.responseJSON?.message || 'Erreur lors de la suppression';
+          alert('Erreur: ' + errorMsg);
+          $('#deleteDepartModal').modal('hide');
+        }
+      });
+    }
+  </script>
+
+</body>
+
+</html>

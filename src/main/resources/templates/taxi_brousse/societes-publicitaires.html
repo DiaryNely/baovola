@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <title>Sociétés Publicitaires - Gestion Taxi Brousse</title>
+  <link href="vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">
+  <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet" type="text/css">
+  <link href="vendor/datatables/dataTables.bootstrap4.min.css" rel="stylesheet">
+  <link href="css/ruang-admin.min.css" rel="stylesheet">
+</head>
+
+<body id="page-top">
+  <div id="wrapper">
+    <div th:replace="~{taxi_brousse/fragments :: sidebar}"></div>
+
+    <div id="content-wrapper" class="d-flex flex-column">
+      <div id="content">
+        <div th:replace="~{taxi_brousse/fragments :: topbar}"></div>
+
+        <div class="container-fluid" id="container-wrapper">
+          <div class="d-sm-flex align-items-center justify-content-between mb-4">
+            <h1 class="h3 mb-0 text-gray-800">Sociétés publicitaires</h1>
+            <button class="btn btn-primary btn-sm" onclick="openSocieteModal()">
+              <i class="fas fa-plus"></i> Nouvelle société
+            </button>
+          </div>
+
+          <div class="card">
+            <div class="table-responsive p-3">
+              <table class="table align-items-center table-flush table-hover" id="societesTable">
+                <thead class="thead-light">
+                  <tr>
+                    <th>ID</th>
+                    <th>Code</th>
+                    <th>Nom</th>
+                    <th>Téléphone</th>
+                    <th>Email</th>
+                    <th>Contact</th>
+                    <th>Actif</th>
+                    <th>Créé le</th>
+                    <th style="width: 140px;">Actions</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div th:replace="~{taxi_brousse/fragments :: footer}"></div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="societeModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="societeModalTitle">Nouvelle société</h5>
+          <button type="button" class="close" data-dismiss="modal">&times;</button>
+        </div>
+        <div class="modal-body">
+          <form id="societeForm">
+            <input type="hidden" id="societeId">
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label for="societeCode">Code *</label>
+                <input type="text" class="form-control" id="societeCode" required>
+              </div>
+              <div class="col-md-6 mb-3">
+                <label for="societeNom">Nom *</label>
+                <input type="text" class="form-control" id="societeNom" required>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label for="societeTelephone">Téléphone</label>
+                <input type="text" class="form-control" id="societeTelephone">
+              </div>
+              <div class="col-md-6 mb-3">
+                <label for="societeEmail">Email</label>
+                <input type="email" class="form-control" id="societeEmail">
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-12 mb-3">
+                <label for="societeAdresse">Adresse</label>
+                <textarea class="form-control" id="societeAdresse" rows="2"></textarea>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label for="societeContactNom">Contact nom</label>
+                <input type="text" class="form-control" id="societeContactNom">
+              </div>
+              <div class="col-md-6 mb-3">
+                <label for="societeContactTelephone">Contact téléphone</label>
+                <input type="text" class="form-control" id="societeContactTelephone">
+              </div>
+            </div>
+            <div class="custom-control custom-checkbox">
+              <input type="checkbox" class="custom-control-input" id="societeActif" checked>
+              <label class="custom-control-label" for="societeActif">Actif</label>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuler</button>
+          <button type="button" class="btn btn-primary" onclick="saveSociete()">
+            <i class="fas fa-save"></i> Enregistrer
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="vendor/jquery/jquery.min.js"></script>
+  <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <script src="vendor/datatables/jquery.dataTables.min.js"></script>
+  <script src="vendor/datatables/dataTables.bootstrap4.min.js"></script>
+
+  <script>
+    $(document).ready(function () {
+      $('#societesTable').DataTable();
+      loadSocietes();
+    });
+
+    function loadSocietes() {
+      $.get('/api/societes-publicitaires', function(data) {
+        const table = $('#societesTable').DataTable();
+        table.clear();
+        (data || []).forEach(s => {
+          const contact = `${s.contactNom || ''} ${s.contactTelephone || ''}`.trim();
+          const date = s.createdAt ? new Date(s.createdAt).toLocaleString('fr-FR') : '-';
+          table.row.add([
+            s.id,
+            s.code || '-',
+            s.nom || '-',
+            s.telephone || '-',
+            s.email || '-',
+            contact || '-',
+            s.actif ? 'Oui' : 'Non',
+            date,
+            `
+              <button class="btn btn-sm btn-warning" onclick="editSociete(${s.id})"><i class="fas fa-edit"></i></button>
+              <button class="btn btn-sm btn-danger" onclick="deleteSociete(${s.id})"><i class="fas fa-trash"></i></button>
+            `
+          ]);
+        });
+        table.draw();
+      });
+    }
+
+    function openSocieteModal() {
+      $('#societeId').val('');
+      $('#societeForm')[0].reset();
+      $('#societeActif').prop('checked', true);
+      $('#societeModalTitle').text('Nouvelle société');
+      $('#societeModal').modal('show');
+    }
+
+    function editSociete(id) {
+      $.get(`/api/societes-publicitaires/${id}`, function(s) {
+        $('#societeId').val(s.id);
+        $('#societeCode').val(s.code);
+        $('#societeNom').val(s.nom);
+        $('#societeTelephone').val(s.telephone || '');
+        $('#societeEmail').val(s.email || '');
+        $('#societeAdresse').val(s.adresse || '');
+        $('#societeContactNom').val(s.contactNom || '');
+        $('#societeContactTelephone').val(s.contactTelephone || '');
+        $('#societeActif').prop('checked', s.actif !== false);
+        $('#societeModalTitle').text('Modifier société');
+        $('#societeModal').modal('show');
+      });
+    }
+
+    function saveSociete() {
+      const id = $('#societeId').val();
+      const payload = {
+        code: $('#societeCode').val(),
+        nom: $('#societeNom').val(),
+        telephone: $('#societeTelephone').val() || null,
+        email: $('#societeEmail').val() || null,
+        adresse: $('#societeAdresse').val() || null,
+        contactNom: $('#societeContactNom').val() || null,
+        contactTelephone: $('#societeContactTelephone').val() || null,
+        actif: $('#societeActif').is(':checked')
+      };
+
+      const method = id ? 'PUT' : 'POST';
+      const url = id ? `/api/societes-publicitaires/${id}` : '/api/societes-publicitaires';
+
+      $.ajax({
+        url: url,
+        type: method,
+        contentType: 'application/json',
+        data: JSON.stringify(payload),
+        success: function() {
+          $('#societeModal').modal('hide');
+          loadSocietes();
+        },
+        error: function(xhr) {
+          alert('Erreur: ' + (xhr.responseJSON?.message || 'Opération échouée'));
+        }
+      });
+    }
+
+    function deleteSociete(id) {
+      if (!confirm('Supprimer cette société ?')) return;
+      $.ajax({
+        url: `/api/societes-publicitaires/${id}`,
+        type: 'DELETE',
+        success: function() {
+          loadSocietes();
+        },
+        error: function(xhr) {
+          alert('Erreur: ' + (xhr.responseJSON?.message || 'Suppression échouée'));
+        }
+      });
+    }
+  </script>
+</body>
+</html>

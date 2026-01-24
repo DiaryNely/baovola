@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <title>Publicités - Gestion Taxi Brousse</title>
+  <link href="vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">
+  <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet" type="text/css">
+  <link href="vendor/datatables/dataTables.bootstrap4.min.css" rel="stylesheet">
+  <link href="css/ruang-admin.min.css" rel="stylesheet">
+</head>
+
+<body id="page-top">
+  <div id="wrapper">
+    <div th:replace="~{taxi_brousse/fragments :: sidebar}"></div>
+
+    <div id="content-wrapper" class="d-flex flex-column">
+      <div id="content">
+        <div th:replace="~{taxi_brousse/fragments :: topbar}"></div>
+
+        <div class="container-fluid" id="container-wrapper">
+          <div class="d-sm-flex align-items-center justify-content-between mb-4">
+            <h1 class="h3 mb-0 text-gray-800">Publicités</h1>
+            <button class="btn btn-primary btn-sm" onclick="openPubliciteModal()">
+              <i class="fas fa-plus"></i> Nouvelle publicité
+            </button>
+          </div>
+
+          <div class="card">
+            <div class="table-responsive p-3">
+              <table class="table align-items-center table-flush table-hover" id="publicitesTable">
+                <thead class="thead-light">
+                  <tr>
+                    <th>ID</th>
+                    <th>Code</th>
+                    <th>Titre</th>
+                    <th>Société</th>
+                    <th>Validité</th>
+                    <th>Durée (s)</th>
+                    <th>Actif</th>
+                    <th style="width: 140px;">Actions</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div th:replace="~{taxi_brousse/fragments :: footer}"></div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="publiciteModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="publiciteModalTitle">Nouvelle publicité</h5>
+          <button type="button" class="close" data-dismiss="modal">&times;</button>
+        </div>
+        <div class="modal-body">
+          <form id="publiciteForm">
+            <input type="hidden" id="publiciteId">
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label for="publiciteCode">Code *</label>
+                <input type="text" class="form-control" id="publiciteCode" required>
+              </div>
+              <div class="col-md-6 mb-3">
+                <label for="publiciteSociete">Société *</label>
+                <select class="form-control" id="publiciteSociete" required>
+                  <option value="">Sélectionner une société</option>
+                </select>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-12 mb-3">
+                <label for="publiciteTitre">Titre *</label>
+                <input type="text" class="form-control" id="publiciteTitre" required>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-12 mb-3">
+                <label for="publiciteDescription">Description</label>
+                <textarea class="form-control" id="publiciteDescription" rows="2"></textarea>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-8 mb-3">
+                <label for="publiciteUrl">URL vidéo</label>
+                <input type="text" class="form-control" id="publiciteUrl">
+              </div>
+              <div class="col-md-4 mb-3">
+                <label for="publiciteDuree">Durée (secondes)</label>
+                <input type="number" class="form-control" id="publiciteDuree" min="1">
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label for="publiciteDateDebut">Date début *</label>
+                <input type="date" class="form-control" id="publiciteDateDebut" required>
+              </div>
+              <div class="col-md-6 mb-3">
+                <label for="publiciteDateFin">Date fin *</label>
+                <input type="date" class="form-control" id="publiciteDateFin" required>
+              </div>
+            </div>
+            <div class="custom-control custom-checkbox">
+              <input type="checkbox" class="custom-control-input" id="publiciteActif" checked>
+              <label class="custom-control-label" for="publiciteActif">Actif</label>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuler</button>
+          <button type="button" class="btn btn-primary" onclick="savePublicite()">
+            <i class="fas fa-save"></i> Enregistrer
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="vendor/jquery/jquery.min.js"></script>
+  <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <script src="vendor/datatables/jquery.dataTables.min.js"></script>
+  <script src="vendor/datatables/dataTables.bootstrap4.min.js"></script>
+
+  <script>
+    let societes = [];
+
+    $(document).ready(function () {
+      $('#publicitesTable').DataTable();
+      loadSocietes();
+      loadPublicites();
+    });
+
+    function loadSocietes() {
+      $.get('/api/societes-publicitaires', function(data) {
+        societes = data || [];
+        const select = $('#publiciteSociete');
+        select.empty().append('<option value="">Sélectionner une société</option>');
+        societes.forEach(s => {
+          select.append(`<option value="${s.id}">${s.code} - ${s.nom}</option>`);
+        });
+      });
+    }
+
+    function loadPublicites() {
+      $.get('/api/publicites', function(data) {
+        const table = $('#publicitesTable').DataTable();
+        table.clear();
+        (data || []).forEach(p => {
+          const validite = `${formatDate(p.dateDebutValidite)} → ${formatDate(p.dateFinValidite)}`;
+          table.row.add([
+            p.id,
+            p.code || '-',
+            p.titre || '-',
+            p.societePublicitaireNom || '-',
+            validite,
+            p.dureeSecondes || '-',
+            p.actif ? 'Oui' : 'Non',
+            `
+              <button class="btn btn-sm btn-warning" onclick="editPublicite(${p.id})"><i class="fas fa-edit"></i></button>
+              <button class="btn btn-sm btn-danger" onclick="deletePublicite(${p.id})"><i class="fas fa-trash"></i></button>
+            `
+          ]);
+        });
+        table.draw();
+      });
+    }
+
+    function openPubliciteModal() {
+      $('#publiciteId').val('');
+      $('#publiciteForm')[0].reset();
+      $('#publiciteActif').prop('checked', true);
+      $('#publiciteModalTitle').text('Nouvelle publicité');
+      $('#publiciteModal').modal('show');
+    }
+
+    function editPublicite(id) {
+      $.get(`/api/publicites/${id}`, function(p) {
+        $('#publiciteId').val(p.id);
+        $('#publiciteCode').val(p.code);
+        $('#publiciteSociete').val(p.societePublicitaireId);
+        $('#publiciteTitre').val(p.titre);
+        $('#publiciteDescription').val(p.description || '');
+        $('#publiciteUrl').val(p.urlVideo || '');
+        $('#publiciteDuree').val(p.dureeSecondes || '');
+        $('#publiciteDateDebut').val(p.dateDebutValidite || '');
+        $('#publiciteDateFin').val(p.dateFinValidite || '');
+        $('#publiciteActif').prop('checked', p.actif !== false);
+        $('#publiciteModalTitle').text('Modifier publicité');
+        $('#publiciteModal').modal('show');
+      });
+    }
+
+    function savePublicite() {
+      const id = $('#publiciteId').val();
+      const payload = {
+        code: $('#publiciteCode').val(),
+        societePublicitaireId: parseInt($('#publiciteSociete').val()),
+        titre: $('#publiciteTitre').val(),
+        description: $('#publiciteDescription').val() || null,
+        urlVideo: $('#publiciteUrl').val() || null,
+        dureeSecondes: $('#publiciteDuree').val() ? parseInt($('#publiciteDuree').val()) : null,
+        dateDebutValidite: $('#publiciteDateDebut').val(),
+        dateFinValidite: $('#publiciteDateFin').val(),
+        actif: $('#publiciteActif').is(':checked')
+      };
+
+      const method = id ? 'PUT' : 'POST';
+      const url = id ? `/api/publicites/${id}` : '/api/publicites';
+
+      $.ajax({
+        url: url,
+        type: method,
+        contentType: 'application/json',
+        data: JSON.stringify(payload),
+        success: function() {
+          $('#publiciteModal').modal('hide');
+          loadPublicites();
+        },
+        error: function(xhr) {
+          alert('Erreur: ' + (xhr.responseJSON?.message || 'Opération échouée'));
+        }
+      });
+    }
+
+    function deletePublicite(id) {
+      if (!confirm('Supprimer cette publicité ?')) return;
+      $.ajax({
+        url: `/api/publicites/${id}`,
+        type: 'DELETE',
+        success: function() {
+          loadPublicites();
+        },
+        error: function(xhr) {
+          alert('Erreur: ' + (xhr.responseJSON?.message || 'Suppression échouée'));
+        }
+      });
+    }
+
+    function formatDate(dateStr) {
+      if (!dateStr) return '-';
+      return new Date(dateStr).toLocaleDateString('fr-FR');
+    }
+  </script>
+</body>
+</html>

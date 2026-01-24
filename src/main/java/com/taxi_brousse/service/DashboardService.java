@@ -1,12 +1,17 @@
 package com.taxi_brousse.service;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.TextStyle;
 import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
@@ -15,19 +20,27 @@ import org.springframework.transaction.annotation.Transactional;
 import com.taxi_brousse.dto.DashboardDTO;
 import com.taxi_brousse.dto.DashboardDTO.AlerteDTO;
 import com.taxi_brousse.dto.DepartDTO;
+import com.taxi_brousse.dto.RentabiliteTrajetDTO;
+import com.taxi_brousse.dto.RevenuMensuelDTO;
+import com.taxi_brousse.dto.StatistiquesFinancieresDTO;
 import com.taxi_brousse.entity.Depart;
 import com.taxi_brousse.entity.Paiement;
 import com.taxi_brousse.entity.Reservation;
 import com.taxi_brousse.entity.Vehicule;
+import com.taxi_brousse.entity.VehiculeSiegeConfig;
 import com.taxi_brousse.mapper.DepartMapper;
 import com.taxi_brousse.repository.ChauffeurRepository;
 import com.taxi_brousse.repository.ClientRepository;
 import com.taxi_brousse.repository.CooperativeRepository;
+import com.taxi_brousse.repository.DepartPubliciteRepository;
 import com.taxi_brousse.repository.DepartRepository;
+import com.taxi_brousse.repository.PaiementPubliciteRepository;
 import com.taxi_brousse.repository.PaiementRepository;
+import com.taxi_brousse.repository.ReservationPassagerRepository;
 import com.taxi_brousse.repository.ReservationRepository;
 import com.taxi_brousse.repository.TrajetRepository;
 import com.taxi_brousse.repository.VehiculeRepository;
+import com.taxi_brousse.repository.VehiculeSiegeConfigRepository;
 
 import lombok.RequiredArgsConstructor;
 
@@ -46,6 +59,10 @@ public class DashboardService {
     private final DepartMapper departMapper;
     private final DepartAutomationService departAutomationService;
     private final SiegeConfigurationService siegeConfigurationService;
+    private final ReservationPassagerRepository reservationPassagerRepository;
+    private final PaiementPubliciteRepository paiementPubliciteRepository;
+    private final DepartPubliciteRepository departPubliciteRepository;
+    private final VehiculeSiegeConfigRepository vehiculeSiegeConfigRepository;
 
     @Transactional(readOnly = true)
     public DashboardDTO getDashboardStats() {
@@ -143,6 +160,12 @@ public class DashboardService {
         dashboard.setTotalChauffeurs(chauffeurRepository.count());
         dashboard.setTotalCooperatives(cooperativeRepository.count());
         dashboard.setTotalTrajets(trajetRepository.count());
+        
+        // ============ STATISTIQUES FINANCIÈRES ============
+        // Période : 6 derniers mois par défaut
+        LocalDateTime dateDebutFinancier = now.minusMonths(6).withDayOfMonth(1).toLocalDate().atStartOfDay();
+        StatistiquesFinancieresDTO statsFinancieres = getStatistiquesFinancieres(dateDebutFinancier, now);
+        dashboard.setStatsFinancieres(statsFinancieres);
         
         return dashboard;
     }
@@ -267,4 +290,201 @@ public class DashboardService {
         
         return alertes;
     }
+
+    // ===== Méthodes pour Dashboard Financier =====
+
+    /**
+     * Génère les statistiques financières complètes pour une période donnée
+     */
+    public StatistiquesFinancieresDTO getStatistiquesFinancieres(LocalDateTime dateDebut, LocalDateTime dateFin) {
+        // Récupérer les départs de la période
+        List<Depart> departs = departRepository.findByDateRange(dateDebut, dateFin);
+        List<Long> departIds = departs.stream().map(Depart::getId).collect(Collectors.toList());
+
+        // Revenus réservations
+        BigDecimal revenusReservations = reservationRepository.sumMontantPayeByDateRange(dateDebut, dateFin);
+        Long nombreReservations = reservationRepository.countConfirmedReservationsByDateRange(dateDebut, dateFin);
+
+        // Revenus publicités (basé sur date de paiement)
+        BigDecimal revenusPublicites = paiementPubliciteRepository.sumMontantByDateRange(dateDebut, dateFin);
+
+        // Revenus total
+        BigDecimal revenusTotal = revenusReservations.add(revenusPublicites);
+
+        // Taux de remplissage moyen
+        Double tauxRemplissageMoyen = calculateTauxRemplissageMoyen(departs);
+
+        // Statistiques par statut
+        Long departsEnCours = departRepository.countByStatutAndDateRange("EN_COURS", dateDebut, dateFin);
+        Long departsTermines = departRepository.countByStatutAndDateRange("TERMINE", dateDebut, dateFin);
+        Long departsAnnules = departRepository.countByStatutAndDateRange("ANNULE", dateDebut, dateFin);
+        Long deprogrammes = departRepository.countByStatutAndDateRange("PROGRAMME", dateDebut, dateFin);
+
+        // Évolution mensuelle
+        List<RevenuMensuelDTO> revenusMensuels = calculateRevenusMensuels(dateDebut, dateFin);
+
+        // Rentabilité par trajet
+        List<RentabiliteTrajetDTO> rentabiliteParTrajet = calculateRentabiliteParTrajet(dateDebut, dateFin, departs);
+
+        // Top 5 trajets
+        List<RentabiliteTrajetDTO> top5Trajets = rentabiliteParTrajet.stream()
+                .sorted((a, b) -> b.getRevenusTotal().compareTo(a.getRevenusTotal()))
+                .limit(5)
+                .collect(Collectors.toList());
+
+        return StatistiquesFinancieresDTO.builder()
+                .revenusTotal(revenusTotal)
+                .revenusReservations(revenusReservations)
+                .revenusPublicites(revenusPublicites)
+                .nombreDeparts(departs.size())
+                .nombreReservations(nombreReservations.intValue())
+                .tauxRemplissageMoyen(tauxRemplissageMoyen)
+                .revenusMensuels(revenusMensuels)
+                .rentabiliteParTrajet(rentabiliteParTrajet)
+                .top5Trajets(top5Trajets)
+                .departsEnCours(departsEnCours)
+                .departsTermines(departsTermines)
+                .departsAnnules(departsAnnules)
+                .deprogrammes(deprogrammes)
+                .build();
+    }
+
+    private Double calculateTauxRemplissageMoyen(List<Depart> departs) {
+        if (departs.isEmpty()) return 0.0;
+
+        double totalTaux = 0.0;
+        int count = 0;
+
+        for (Depart depart : departs) {
+            Integer capacite = getCapaciteEffective(depart);
+            if (capacite != null && capacite > 0) {
+                Long passagers = reservationRepository.countPassagersByDepartId(depart.getId());
+                double taux = (passagers.doubleValue() / capacite) * 100;
+                totalTaux += taux;
+                count++;
+            }
+        }
+
+        return count > 0 ? BigDecimal.valueOf(totalTaux / count)
+                .setScale(2, RoundingMode.HALF_UP).doubleValue() : 0.0;
+    }
+
+    private Integer getCapaciteEffective(Depart depart) {
+        if (depart.getVehicule() != null) {
+            List<VehiculeSiegeConfig> sieges = vehiculeSiegeConfigRepository
+                    .findByVehiculeIdOrderByRefSiegeCategorieOrdreAsc(depart.getVehicule().getId());
+            return sieges.size();
+        }
+        return 0;
+    }
+
+    private List<RevenuMensuelDTO> calculateRevenusMensuels(LocalDateTime dateDebut, LocalDateTime dateFin) {
+        List<RevenuMensuelDTO> mensuels = new ArrayList<>();
+        List<Object[]> departsParMois = departRepository.findDepartsGroupByMonth(dateDebut, dateFin);
+        
+        for (Object[]row : departsParMois) {
+            Integer annee = ((Number) row[0]).intValue();
+            Integer mois = ((Number) row[1]).intValue();
+            Long nombreDeparts = ((Number) row[2]).longValue();
+
+            LocalDateTime debutMois = LocalDateTime.of(annee, mois, 1, 0, 0);
+            LocalDateTime finMois = debutMois.plusMonths(1).minusSeconds(1);
+            
+            List<Depart> departsMois = departRepository.findByDateRange(debutMois, finMois);
+            BigDecimal revenusReservations = reservationRepository.sumMontantPayeByDateRange(debutMois, finMois);
+            BigDecimal revenusPublicites = paiementPubliciteRepository.sumMontantByDateRange(debutMois, finMois);
+            Double tauxRemplissage = calculateTauxRemplissageMoyen(departsMois);
+            Long nbReservations = reservationRepository.countConfirmedReservationsByDateRange(debutMois, finMois);
+
+            String moisLabel = java.time.Month.of(mois).getDisplayName(TextStyle.FULL, new Locale("fr", "FR"))
+                    + " " + annee;
+
+            mensuels.add(RevenuMensuelDTO.builder()
+                    .annee(annee)
+                    .mois(mois)
+                    .moisLabel(moisLabel)
+                    .revenusTotal(revenusReservations.add(revenusPublicites))
+                    .revenusReservations(revenusReservations)
+                    .revenusPublicites(revenusPublicites)
+                    .nombreDeparts(nombreDeparts.intValue())
+                    .nombreReservations(nbReservations.intValue())
+                    .tauxRemplissage(tauxRemplissage)
+                    .build());
+        }
+        
+        return mensuels;
+    }
+
+    private List<RentabiliteTrajetDTO> calculateRentabiliteParTrajet(
+            LocalDateTime dateDebut, LocalDateTime dateFin, List<Depart> departs) {
+        
+        Map<Long, List<Depart>> departsByTrajet = departs.stream()
+                .filter(d -> d.getTrajet() != null)
+                .collect(Collectors.groupingBy(d -> d.getTrajet().getId()));
+
+        List<RentabiliteTrajetDTO> rentabilites = new ArrayList<>();
+
+        for (Map.Entry<Long, List<Depart>> entry : departsByTrajet.entrySet()) {
+            List<Depart> departsTrajet = entry.getValue();
+            Depart premierDepart = departsTrajet.get(0);
+            List<Long> departIds = departsTrajet.stream().map(Depart::getId).collect(Collectors.toList());
+
+            Map<Long, BigDecimal> revenusParDepart = new HashMap<>();
+            if (!departIds.isEmpty()) {
+                List<Object[]> results = reservationRepository.sumMontantPayeGroupByDepart(departIds);
+                for (Object[] row : results) {
+                    revenusParDepart.put(((Number) row[0]).longValue(), (BigDecimal) row[1]);
+                }
+            }
+            BigDecimal revenusReservations = revenusParDepart.values().stream()
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+            BigDecimal revenusPublicites = BigDecimal.ZERO;
+            for (Long departId : departIds) {
+                BigDecimal montant = departPubliciteRepository.sumMontantPayeByDepartId(departId);
+                if (montant != null) {
+                    revenusPublicites = revenusPublicites.add(montant);
+                }
+            }
+
+            Map<Long, Long> reservationsParDepart = new HashMap<>();
+            if (!departIds.isEmpty()) {
+                List<Object[]> results = reservationRepository.countReservationsGroupByDepart(departIds);
+                for (Object[] row : results) {
+                    reservationsParDepart.put(((Number) row[0]).longValue(), ((Number) row[1]).longValue());
+                }
+            }
+            Integer nombreReservations = reservationsParDepart.values().stream()
+                    .mapToInt(Long::intValue).sum();
+
+            Double tauxRemplissage = calculateTauxRemplissageMoyen(departsTrajet);
+            BigDecimal revenusTotal = revenusReservations.add(revenusPublicites);
+            BigDecimal revenuMoyen = departsTrajet.size() > 0 
+                    ? revenusTotal.divide(BigDecimal.valueOf(departsTrajet.size()), 2, RoundingMode.HALF_UP)
+                    : BigDecimal.ZERO;
+
+            String itineraire = premierDepart.getLieuDepart().getNom() + " → " + 
+                    premierDepart.getLieuArrivee().getNom();
+
+            rentabilites.add(RentabiliteTrajetDTO.builder()
+                    .trajetId(premierDepart.getTrajet().getId())
+                    .trajetCode(premierDepart.getTrajet().getCode())
+                    .lieuDepartNom(premierDepart.getLieuDepart().getNom())
+                    .lieuArriveeNom(premierDepart.getLieuArrivee().getNom())
+                    .itineraire(itineraire)
+                    .nombreDeparts(departsTrajet.size())
+                    .nombreReservations(nombreReservations)
+                    .revenusTotal(revenusTotal)
+                    .revenusReservations(revenusReservations)
+                    .revenusPublicites(revenusPublicites)
+                    .tauxRemplissageMoyen(tauxRemplissage)
+                    .revenuMoyenParDepart(revenuMoyen)
+                    .build());
+        }
+
+        return rentabilites.stream()
+                .sorted((a, b) -> b.getRevenusTotal().compareTo(a.getRevenusTotal()))
+                .collect(Collectors.toList());
+    }
 }
+

@@ -7,10 +7,10 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpHeaders;
@@ -19,6 +19,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import com.itextpdf.kernel.pdf.PdfDocument;
@@ -27,27 +28,47 @@ import com.itextpdf.layout.Document;
 import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.element.Table;
 import com.itextpdf.layout.properties.TextAlignment;
-import com.taxi_brousse.dto.DashboardDTO;
 import com.taxi_brousse.dto.RentabiliteTrajetDTO;
+import com.taxi_brousse.dto.RevenuMensuelDTO;
 import com.taxi_brousse.dto.StatistiquesFinancieresDTO;
 import com.taxi_brousse.service.DashboardService;
 
+import lombok.RequiredArgsConstructor;
+
 @Controller
-public class HomeController {
+@RequestMapping("/dashboard")
+@RequiredArgsConstructor
+public class DashboardFinancierController {
 
-    @Autowired
-    private DashboardService dashboardService;
+    private final DashboardService dashboardService;
 
-    @GetMapping({"/", "/index", "/home"})
-    public String index(Model model) {
-        // Charger toutes les statistiques du dashboard
-        DashboardDTO dashboard = dashboardService.getDashboardStats();
-        model.addAttribute("dashboard", dashboard);
-        
-        return "taxi_brousse/index";
+    @GetMapping("/financier")
+    public String afficherDashboard(
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate dateDebut,
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate dateFin,
+            Model model) {
+
+        // Par défaut: 6 derniers mois
+        if (dateDebut == null) {
+            dateDebut = LocalDate.now().minusMonths(6).withDayOfMonth(1);
+        }
+        if (dateFin == null) {
+            dateFin = LocalDate.now();
+        }
+
+        LocalDateTime dateDebutTime = dateDebut.atStartOfDay();
+        LocalDateTime dateFinTime = dateFin.atTime(23, 59, 59);
+
+        StatistiquesFinancieresDTO stats = dashboardService.getStatistiquesFinancieres(dateDebutTime, dateFinTime);
+
+        model.addAttribute("stats", stats);
+        model.addAttribute("dateDebut", dateDebut);
+        model.addAttribute("dateFin", dateFin);
+
+        return "taxi_brousse/dashboard-financier";
     }
 
-    @GetMapping("/dashboard/export/excel")
+    @GetMapping("/financier/export/excel")
     public ResponseEntity<InputStreamResource> exporterExcel(
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate dateDebut,
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate dateFin) throws IOException {
@@ -75,7 +96,7 @@ public class HomeController {
                 .body(new InputStreamResource(in));
     }
 
-    @GetMapping("/dashboard/export/pdf")
+    @GetMapping("/financier/export/pdf")
     public ResponseEntity<InputStreamResource> exporterPDF(
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate dateDebut,
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate dateFin) throws IOException {

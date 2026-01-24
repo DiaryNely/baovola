@@ -99,6 +99,17 @@
       box-shadow: 0 4px 12px rgba(0,0,0,0.15);
       transform: translateX(5px);
     }
+    .depart-card.en-cours {
+      border-left-color: #858796;
+      opacity: 0.7;
+      cursor: not-allowed;
+      background-color: #f8f9fc;
+      pointer-events: none;
+    }
+    .depart-card.en-cours:hover {
+      box-shadow: none;
+      transform: none;
+    }
     .depart-card .card-body {
       padding: 12px;
     }
@@ -496,6 +507,11 @@
       const placesDisponibles = placesTotal - placesOccupees;
       const tauxOccupation = (placesOccupees / placesTotal) * 100;
       
+      // Vérifier si le départ est en cours
+      const isEnCours = depart.refDepartStatutCode === 'EN_COURS';
+      const cardClass = isEnCours ? 'depart-card en-cours' : 'depart-card';
+      const onclick = isEnCours ? '' : `onclick="reserverDepart(${depart.id})" style="cursor: pointer;"`;
+      
       let placesClass = 'places-disponibles';
       let placesIcon = 'fa-check-circle';
       if (tauxOccupation >= 80) {
@@ -507,9 +523,20 @@
         placesIcon = 'fa-times-circle';
       }
       
+      let messageEnCours = '';
+      if (isEnCours) {
+        messageEnCours = `
+          <div class="alert alert-warning mb-2 py-2">
+            <i class="fas fa-info-circle"></i>
+            <small><strong>Départ déjà en cours</strong> - Réservation non disponible</small>
+          </div>
+        `;
+      }
+      
       return `
-        <div class="card depart-card mb-3" onclick="reserverDepart(${depart.id})">
+        <div class="card ${cardClass} mb-3" ${onclick}>
           <div class="card-body">
+            ${messageEnCours}
             <div class="d-flex justify-content-between align-items-start mb-2">
               <div class="flex-grow-1">
                 <h6 class="mb-1">

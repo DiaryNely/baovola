@@ -39,6 +39,9 @@ public class DashboardDTO {
     // Prochains départs (24h)
     private List<DepartDTO> prochainsDeparts;
     
+    // Statistiques financières (6 derniers mois)
+    private StatistiquesFinancieresDTO statsFinancieres;
+    
     // Statistiques générales
     private Long totalClients;
     private Long totalChauffeurs;

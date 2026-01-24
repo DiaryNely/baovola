@@ -1,6 +1,8 @@
 package com.taxi_brousse.repository;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.data.domain.Pageable;
@@ -48,4 +50,18 @@ public interface PaiementPubliciteRepository extends JpaRepository<PaiementPubli
             @Param("societeId") Long societeId,
             @Param("mois") Integer mois,
             @Param("annee") Integer annee);
+    
+    // ===== Requêtes pour Dashboard Financier =====
+    
+    /**
+     * Somme totale des paiements publicité dans une période
+     */
+    @Query("SELECT COALESCE(SUM(p.montant), 0) FROM PaiementPublicite p WHERE " +
+           "(CAST(:dateDebut AS timestamp) IS NULL OR p.datePaiement >= CAST(:dateDebut AS date)) AND " +
+           "(CAST(:dateFin AS timestamp) IS NULL OR p.datePaiement <= CAST(:dateFin AS date))")
+    BigDecimal sumMontantByDateRange(
+            @Param("dateDebut") LocalDateTime dateDebut,
+            @Param("dateFin") LocalDateTime dateFin
+    );
 }
+

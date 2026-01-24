@@ -222,4 +222,23 @@ public interface DepartPubliciteRepository extends JpaRepository<DepartPublicite
            java.math.BigDecimal sumMontantFactureByDepartIdAndSocieteId(
                    @Param("departId") Long departId, 
                    @Param("societeId") Long societeId);
+
+           /**
+            * Montant payé total pour un départ (proportionnel aux paiements de chaque société)
+            * Utilisé pour le dashboard financier
+            */
+           @Query("SELECT COALESCE(SUM(" +
+                  "dp.montantFacture * " +
+                  "(SELECT COALESCE(SUM(pp.montant), 0) " +
+                  " FROM PaiementPublicite pp " +
+                  " WHERE pp.societePublicitaire.id = dp.publicite.societePublicitaire.id) / " +
+                  "NULLIF((SELECT COALESCE(SUM(dp2.montantFacture), 0) " +
+                  " FROM DepartPublicite dp2 " +
+                  " WHERE dp2.publicite.societePublicitaire.id = dp.publicite.societePublicitaire.id " +
+                  " AND dp2.statutDiffusion <> 'ANNULE'), 0)" +
+                  "), 0) " +
+                  "FROM DepartPublicite dp " +
+                  "WHERE dp.depart.id = :departId " +
+                  "AND dp.statutDiffusion <> 'ANNULE'")
+           java.math.BigDecimal sumMontantPayeByDepartId(@Param("departId") Long departId);
 }

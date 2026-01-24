@@ -405,6 +405,7 @@ public class DepartService {
             departPubliciteRepository.findSocietesByDepartId(dto.getId());
 
         java.util.List<PaiementSocieteDTO> paiementsParSociete = new java.util.ArrayList<>();
+        java.math.BigDecimal totalPublicitesPaye = java.math.BigDecimal.ZERO;
 
         for (com.taxi_brousse.entity.SocietePublicitaire societe : societes) {
             // Montant facturé pour ce départ et cette société
@@ -427,6 +428,9 @@ public class DepartService {
                     .multiply(montantTotalPaye != null ? montantTotalPaye : java.math.BigDecimal.ZERO)
                     .divide(montantTotalFacture, 2, java.math.RoundingMode.HALF_UP);
             }
+
+            // Accumuler le total payé pour ce départ
+            totalPublicitesPaye = totalPublicitesPaye.add(montantPaye);
 
             // Reste à payer pour ce départ
             java.math.BigDecimal montantRestant = montantFacture.subtract(montantPaye);
@@ -457,6 +461,7 @@ public class DepartService {
         }
 
         dto.setPaiementsParSociete(paiementsParSociete);
+        dto.setMontantPublicitesPaye(totalPublicitesPaye);
     }
     
     private String genererCodeDepart(Cooperative cooperative, Trajet trajet, LocalDateTime dateDepart) {

@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+
+<head>
+    <title>Dashboard Financier - Taxi Brousse</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <style>
+        .stat-card {
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .stat-card-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+        .stat-card-success { background: linear-gradient(135deg, #48c6ef 0%, #6f86d6 100%); color: white; }
+        .stat-card-warning { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; }
+        .stat-card-info { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; }
+        
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+        .chart-container {
+            position: relative;
+            height: 400px;
+            margin-bottom: 30px;
+        }
+        .filter-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .export-btn {
+            margin-left: 10px;
+        }
+    </style>
+</head>
+
+<body>
+<div layout:fragment="content">
+    <div class="container-fluid">
+        <!-- En-tête avec filtres et boutons d'export -->
+        <div class="d-sm-flex align-items-center justify-content-between mb-4">
+            <h1 class="h3 mb-0 text-gray-800">
+                <i class="fas fa-chart-line"></i> Dashboard Financier
+            </h1>
+            <div>
+                <a th:href="@{/dashboard/financier/export/excel(dateDebut=${dateDebut}, dateFin=${dateFin})}" 
+                   class="btn btn-success btn-sm export-btn">
+                    <i class="fas fa-file-excel"></i> Export Excel
+                </a>
+                <a th:href="@{/dashboard/financier/export/pdf(dateDebut=${dateDebut}, dateFin=${dateFin})}" 
+                   class="btn btn-danger btn-sm export-btn">
+                    <i class="fas fa-file-pdf"></i> Export PDF
+                </a>
+            </div>
+        </div>
+
+        <!-- Filtres de période -->
+        <div class="filter-card">
+            <form th:action="@{/dashboard/financier}" method="get" class="form-inline">
+                <label class="mr-2">Période:</label>
+                <input type="date" name="dateDebut" th:value="${dateDebut}" class="form-control mr-2" required />
+                <label class="mr-2">à</label>
+                <input type="date" name="dateFin" th:value="${dateFin}" class="form-control mr-2" required />
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-search"></i> Filtrer
+                </button>
+                <a th:href="@{/dashboard/financier}" class="btn btn-secondary ml-2">
+                    <i class="fas fa-redo"></i> Réinitialiser
+                </a>
+            </form>
+        </div>
+
+        <!-- Statistiques globales -->
+        <div class="row">
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="stat-card stat-card-primary">
+                    <div class="stat-label">
+                        <i class="fas fa-coins"></i> Revenus Total
+                    </div>
+                    <div class="stat-value" th:text="${#numbers.formatDecimal(stats.revenusTotal, 0, 'POINT', 2, 'COMMA')} + ' Ar'">
+                        0 Ar
+                    </div>
+                    <small>CA + Publicités</small>
+                </div>
+            </div>
+
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="stat-card stat-card-success">
+                    <div class="stat-label">
+                        <i class="fas fa-ticket-alt"></i> Revenus Réservations
+                    </div>
+                    <div class="stat-value" th:text="${#numbers.formatDecimal(stats.revenusReservations, 0, 'POINT', 2, 'COMMA')} + ' Ar'">
+                        0 Ar
+                    </div>
+                    <small th:text="${stats.nombreReservations} + ' réservations'">0 réservations</small>
+                </div>
+            </div>
+
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="stat-card stat-card-warning">
+                    <div class="stat-label">
+                        <i class="fas fa-bullhorn"></i> Revenus Publicités
+                    </div>
+                    <div class="stat-value" th:text="${#numbers.formatDecimal(stats.revenusPublicites, 0, 'POINT', 2, 'COMMA')} + ' Ar'">
+                        0 Ar
+                    </div>
+                    <small>Paiements encaissés</small>
+                </div>
+            </div>
+
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="stat-card stat-card-info">
+                    <div class="stat-label">
+                        <i class="fas fa-bus"></i> Taux de Remplissage
+                    </div>
+                    <div class="stat-value" th:text="${#numbers.formatDecimal(stats.tauxRemplissageMoyen, 0, 'POINT', 2, 'COMMA')} + ' %'">
+                        0 %
+                    </div>
+                    <small th:text="${stats.nombreDeparts} + ' départs'">0 départs</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Graphiques -->
+        <div class="row">
+            <!-- Évolution des revenus mensuels -->
+            <div class="col-xl-8 col-lg-7">
+                <div class="card shadow mb-4">
+                    <div class="card-header py-3">
+                        <h6 class="m-0 font-weight-bold text-primary">
+                            <i class="fas fa-chart-area"></i> Évolution des Revenus Mensuels
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container">
+                            <canvas id="revenusChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Répartition des revenus -->
+            <div class="col-xl-4 col-lg-5">
+                <div class="card shadow mb-4">
+                    <div class="card-header py-3">
+                        <h6 class="m-0 font-weight-bold text-primary">
+                            <i class="fas fa-chart-pie"></i> Répartition des Revenus
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container">
+                            <canvas id="repartitionChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Graphique taux de remplissage -->
+        <div class="row">
+            <div class="col-xl-12">
+                <div class="card shadow mb-4">
+                    <div class="card-header py-3">
+                        <h6 class="m-0 font-weight-bold text-primary">
+                            <i class="fas fa-chart-line"></i> Taux de Remplissage Mensuel
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container">
+                            <canvas id="tauxRemplissageChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tableau rentabilité par trajet -->
+        <div class="row">
+            <div class="col-xl-12">
+                <div class="card shadow mb-4">
+                    <div class="card-header py-3">
+                        <h6 class="m-0 font-weight-bold text-primary">
+                            <i class="fas fa-route"></i> Rentabilité par Trajet
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-hover" width="100%" cellspacing="0">
+                                <thead class="thead-light">
+                                    <tr>
+                                        <th>Itinéraire</th>
+                                        <th class="text-center">Départs</th>
+                                        <th class="text-center">Réservations</th>
+                                        <th class="text-right">Rev. Total</th>
+                                        <th class="text-right">Rev. Réservations</th>
+                                        <th class="text-right">Rev. Publicités</th>
+                                        <th class="text-center">Taux Remplissage</th>
+                                        <th class="text-right">Rev. Moyen/Départ</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="trajet : ${stats.rentabiliteParTrajet}">
+                                        <td><strong th:text="${trajet.itineraire}">Itinéraire</strong></td>
+                                        <td class="text-center" th:text="${trajet.nombreDeparts}">0</td>
+                                        <td class="text-center" th:text="${trajet.nombreReservations}">0</td>
+                                        <td class="text-right">
+                                            <span class="badge badge-success" 
+                                                  th:text="${#numbers.formatDecimal(trajet.revenusTotal, 0, 'POINT', 2, 'COMMA')} + ' Ar'">
+                                                0 Ar
+                                            </span>
+                                        </td>
+                                        <td class="text-right" 
+                                            th:text="${#numbers.formatDecimal(trajet.revenusReservations, 0, 'POINT', 2, 'COMMA')} + ' Ar'">
+                                            0 Ar
+                                        </td>
+                                        <td class="text-right" 
+                                            th:text="${#numbers.formatDecimal(trajet.revenusPublicites, 0, 'POINT', 2, 'COMMA')} + ' Ar'">
+                                            0 Ar
+                                        </td>
+                                        <td class="text-center">
+                                            <div class="progress" style="height: 25px;">
+                                                <div class="progress-bar" role="progressbar" 
+                                                     th:style="'width: ' + ${trajet.tauxRemplissageMoyen} + '%'"
+                                                     th:text="${#numbers.formatDecimal(trajet.tauxRemplissageMoyen, 0, 'POINT', 1, 'COMMA')} + '%'">
+                                                    0%
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="text-right" 
+                                            th:text="${#numbers.formatDecimal(trajet.revenuMoyenParDepart, 0, 'POINT', 2, 'COMMA')} + ' Ar'">
+                                            0 Ar
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistiques par statut -->
+        <div class="row">
+            <div class="col-xl-6">
+                <div class="card shadow mb-4">
+                    <div class="card-header py-3">
+                        <h6 class="m-0 font-weight-bold text-primary">
+                            <i class="fas fa-chart-bar"></i> Répartition des Départs par Statut
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container">
+                            <canvas id="statutChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        // Données Thymeleaf
+        const stats = /*[[${stats}]]*/ {};
+        
+        // Graphique évolution des revenus mensuels
+        const revenusCtx = document.getElementById('revenusChart').getContext('2d');
+        const revenusChart = new Chart(revenusCtx, {
+            type: 'line',
+            data: {
+                labels: /*[[${stats.revenusMensuels.![moisLabel]}]]*/ [],
+                datasets: [{
+                    label: 'Revenus Total',
+                    data: /*[[${stats.revenusMensuels.![revenusTotal]}]]*/ [],
+                    borderColor: 'rgb(102, 126, 234)',
+                    backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                    tension: 0.4
+                }, {
+                    label: 'Revenus Réservations',
+                    data: /*[[${stats.revenusMensuels.![revenusReservations]}]]*/ [],
+                    borderColor: 'rgb(72, 198, 239)',
+                    backgroundColor: 'rgba(72, 198, 239, 0.1)',
+                    tension: 0.4
+                }, {
+                    label: 'Revenus Publicités',
+                    data: /*[[${stats.revenusMensuels.![revenusPublicites]}]]*/ [],
+                    borderColor: 'rgb(240, 147, 251)',
+                    backgroundColor: 'rgba(240, 147, 251, 0.1)',
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top'
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return value.toLocaleString('fr-FR') + ' Ar';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // Graphique répartition des revenus
+        const repartitionCtx = document.getElementById('repartitionChart').getContext('2d');
+        const repartitionChart = new Chart(repartitionCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Réservations', 'Publicités'],
+                datasets: [{
+                    data: [
+                        /*[[${stats.revenusReservations}]]*/ 0,
+                        /*[[${stats.revenusPublicites}]]*/ 0
+                    ],
+                    backgroundColor: [
+                        'rgba(72, 198, 239, 0.8)',
+                        'rgba(240, 147, 251, 0.8)'
+                    ],
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+
+        // Graphique taux de remplissage
+        const tauxCtx = document.getElementById('tauxRemplissageChart').getContext('2d');
+        const tauxChart = new Chart(tauxCtx, {
+            type: 'bar',
+            data: {
+                labels: /*[[${stats.revenusMensuels.![moisLabel]}]]*/ [],
+                datasets: [{
+                    label: 'Taux de Remplissage (%)',
+                    data: /*[[${stats.revenusMensuels.![tauxRemplissage]}]]*/ [],
+                    backgroundColor: 'rgba(79, 172, 254, 0.8)',
+                    borderColor: 'rgb(79, 172, 254)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100,
+                        ticks: {
+                            callback: function(value) {
+                                return value + '%';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // Graphique statut des départs
+        const statutCtx = document.getElementById('statutChart').getContext('2d');
+        const statutChart = new Chart(statutCtx, {
+            type: 'bar',
+            data: {
+                labels: ['Programmés', 'En Cours', 'Terminés', 'Annulés'],
+                datasets: [{
+                    label: 'Nombre de départs',
+                    data: [
+                        /*[[${stats.deprogrammes}]]*/ 0,
+                        /*[[${stats.departsEnCours}]]*/ 0,
+                        /*[[${stats.departsTermines}]]*/ 0,
+                        /*[[${stats.departsAnnules}]]*/ 0
+                    ],
+                    backgroundColor: [
+                        'rgba(54, 162, 235, 0.8)',
+                        'rgba(255, 206, 86, 0.8)',
+                        'rgba(75, 192, 192, 0.8)',
+                        'rgba(255, 99, 132, 0.8)'
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            precision: 0
+                        }
+                    }
+                }
+            }
+        });
+        /*]]>*/
+    </script>
+</div>
+</body>
+</html>

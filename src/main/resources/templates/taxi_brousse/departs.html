@@ -58,6 +58,14 @@
           <span>Tarifs</span>
         </a>
       </li>
+      
+      <li class="nav-item">
+        <a class="nav-link" href="/dashboard/financier">
+          <i class="fas fa-fw fa-chart-line"></i>
+          <span>Dashboard Financier</span>
+        </a>
+      </li>
+      
       <li class="nav-item active">
         <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseReservation" aria-expanded="true"
           aria-controls="collapseReservation">
@@ -300,7 +308,7 @@
                           <strong class="text-dark" th:text="${#numbers.formatDecimal((depart.chiffreAffairesMax != null ? depart.chiffreAffairesMax : 0) + (depart.montantDiffusionsPublicite != null ? depart.montantDiffusionsPublicite : 0), 0, 'COMMA', 2, 'POINT') + ' ' + (depart.chiffreAffairesMaxDeviseSymbole != null ? depart.chiffreAffairesMaxDeviseSymbole : (depart.chiffreAffairesMaxDeviseCode != null ? depart.chiffreAffairesMaxDeviseCode : (depart.montantDiffusionsPubliciteDeviseSymbole != null ? depart.montantDiffusionsPubliciteDeviseSymbole : (depart.montantDiffusionsPubliciteDeviseCode != null ? depart.montantDiffusionsPubliciteDeviseCode : ''))))}">0.00</strong>
                         </td>
                         <td>
-                          <strong class="text-secondary" th:text="${#numbers.formatDecimal((depart.chiffreAffaires != null ? depart.chiffreAffaires : 0) + (depart.montantDiffusionsPublicite != null ? depart.montantDiffusionsPublicite : 0), 0, 'COMMA', 2, 'POINT') + ' ' + (depart.montantDiffusionsPubliciteDeviseSymbole != null ? depart.montantDiffusionsPubliciteDeviseSymbole : (depart.montantDiffusionsPubliciteDeviseCode != null ? depart.montantDiffusionsPubliciteDeviseCode : 'Ar'))}">0.00</strong>
+                          <strong class="text-secondary" th:text="${#numbers.formatDecimal((depart.chiffreAffaires != null ? depart.chiffreAffaires : 0) + (depart.montantPublicitesPaye != null ? depart.montantPublicitesPaye : 0), 0, 'COMMA', 2, 'POINT') + ' Ar'}">0.00 Ar</strong>
                         </td>
                         <td>
                           <span class="badge" 

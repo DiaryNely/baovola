@@ -155,7 +155,6 @@
                                                 <td>
                                                     <a th:href="@{/departs/{departId}/stock/{id}/edit(departId=${depart.id}, id=${stock.id})}" 
                                                        class="btn btn-sm btn-primary" 
-                                                       th:if="${stock.quantiteVendue == 0}"
                                                        title="Modifier">
                                                         <i class="fas fa-edit"></i>
                                                     </a>
@@ -166,8 +165,8 @@
                                                             title="Supprimer">
                                                         <i class="fas fa-trash"></i>
                                                     </button>
-                                                    <span th:if="${stock.quantiteVendue > 0}" class="text-muted">
-                                                        <small><i class="fas fa-lock"></i> Ventes en cours</small>
+                                                    <span th:if="${stock.quantiteVendue > 0}" class="text-muted" title="Impossible de supprimer : ventes enregistrées">
+                                                        <small><i class="fas fa-lock"></i></small>
                                                     </span>
 
                                                     <!-- Modal -->

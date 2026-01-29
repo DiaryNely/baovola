@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <title>Statistiques Chiffre d'Affaires - Taxi Brousse</title>
+    <link href="/vendor/fontawesome-free/css/all.min.css" rel="stylesheet">
+    <link href="/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/css/ruang-admin.min.css" rel="stylesheet">
+    <style>
+        .stats-table th {
+            background-color: #4e73df;
+            color: white;
+            text-align: center;
+            vertical-align: middle;
+        }
+        .stats-table td {
+            text-align: right;
+            font-size: 1.1rem;
+            padding: 1rem;
+        }
+        .stats-table .label-col {
+            text-align: left;
+            font-weight: bold;
+            background-color: #f8f9fc;
+        }
+        .stats-table .total-row {
+            background-color: #e3f2fd;
+            font-weight: bold;
+        }
+        .text-theorique {
+            color: #4e73df;
+        }
+        .text-reel {
+            color: #1cc88a;
+        }
+    </style>
+</head>
+
+<body id="page-top">
+    <div id="wrapper">
+        <div th:replace="~{taxi_brousse/fragments :: sidebar}"></div>
+
+        <div id="content-wrapper" class="d-flex flex-column">
+            <div id="content">
+                <nav class="navbar navbar-expand navbar-light bg-navbar topbar mb-4 static-top">
+                    <button id="sidebarToggleTop" class="btn btn-link rounded-circle mr-3">
+                        <i class="fa fa-bars"></i>
+                    </button>
+                    <ul class="navbar-nav ml-auto">
+                        <div class="topbar-divider d-none d-sm-block"></div>
+                        <li class="nav-item dropdown no-arrow">
+                            <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-toggle="dropdown">
+                                <img class="img-profile rounded-circle" src="/img/boy.png" style="max-width: 60px">
+                                <span class="ml-2 d-none d-lg-inline text-white small">Administrateur</span>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+
+                <div class="container-fluid">
+                    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+                        <h1 class="h3 mb-0 text-gray-800">
+                            <i class="fas fa-chart-line"></i> Statistiques Chiffre d'Affaires
+                        </h1>
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item"><a href="/">Home</a></li>
+                            <li class="breadcrumb-item">Statistiques</li>
+                            <li class="breadcrumb-item active">Chiffre d'Affaires</li>
+                        </ol>
+                    </div>
+
+                    <!-- Filtres -->
+                    <div class="row mb-4">
+                        <div class="col-lg-12">
+                            <div class="card border-left-primary">
+                                <div class="card-body">
+                                    <h6 class="font-weight-bold text-primary mb-3">
+                                        <i class="fas fa-filter"></i> Filtrer par période
+                                    </h6>
+                                    <form method="get" action="/statistiques/chiffre-affaires" class="form-inline">
+                                        <label class="mr-2">Mois:</label>
+                                        <select name="mois" class="form-control mr-3" required>
+                                            <option value="1" th:selected="${selectedMois == 1}">Janvier</option>
+                                            <option value="2" th:selected="${selectedMois == 2}">Février</option>
+                                            <option value="3" th:selected="${selectedMois == 3}">Mars</option>
+                                            <option value="4" th:selected="${selectedMois == 4}">Avril</option>
+                                            <option value="5" th:selected="${selectedMois == 5}">Mai</option>
+                                            <option value="6" th:selected="${selectedMois == 6}">Juin</option>
+                                            <option value="7" th:selected="${selectedMois == 7}">Juillet</option>
+                                            <option value="8" th:selected="${selectedMois == 8}">Août</option>
+                                            <option value="9" th:selected="${selectedMois == 9}">Septembre</option>
+                                            <option value="10" th:selected="${selectedMois == 10}">Octobre</option>
+                                            <option value="11" th:selected="${selectedMois == 11}">Novembre</option>
+                                            <option value="12" th:selected="${selectedMois == 12}">Décembre</option>
+                                        </select>
+
+                                        <label class="mr-2">Année:</label>
+                                        <select name="annee" class="form-control mr-3" required>
+                                            <option value="2024" th:selected="${selectedAnnee == 2024}">2024</option>
+                                            <option value="2025" th:selected="${selectedAnnee == 2025}">2025</option>
+                                            <option value="2026" th:selected="${selectedAnnee == 2026}">2026</option>
+                                            <option value="2027" th:selected="${selectedAnnee == 2027}">2027</option>
+                                        </select>
+
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="fas fa-search"></i> Afficher
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Légende -->
+                    <div class="row mb-3">
+                        <div class="col-lg-12">
+                            <div class="alert alert-info">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <i class="fas fa-info-circle"></i>
+                                        <strong class="text-theorique">CA Théorique :</strong> Montant total attendu (facturé)
+                                    </div>
+                                    <div class="col-md-6">
+                                        <i class="fas fa-check-circle"></i>
+                                        <strong class="text-reel">CA Réel :</strong> Montant effectivement encaissé
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tableau des statistiques -->
+                    <div class="row">
+                        <div class="col-lg-12">
+                            <div class="card mb-4">
+                                <div class="card-header py-3">
+                                    <h6 class="m-0 font-weight-bold text-primary">
+                                        <i class="fas fa-table"></i> 
+                                        Chiffre d'Affaires - 
+                                        <span th:text="${stats.mois == 1 ? 'Janvier' : stats.mois == 2 ? 'Février' : stats.mois == 3 ? 'Mars' : stats.mois == 4 ? 'Avril' : stats.mois == 5 ? 'Mai' : stats.mois == 6 ? 'Juin' : stats.mois == 7 ? 'Juillet' : stats.mois == 8 ? 'Août' : stats.mois == 9 ? 'Septembre' : stats.mois == 10 ? 'Octobre' : stats.mois == 11 ? 'Novembre' : 'Décembre'} + ' ' + ${stats.annee}">Janvier 2026</span>
+                                    </h6>
+                                </div>
+                                <div class="table-responsive">
+                                    <table class="table table-bordered stats-table mb-0">
+                                        <thead>
+                                            <tr>
+                                                <th width="20%">Type</th>
+                                                <th width="26%">
+                                                    <i class="fas fa-ticket-alt"></i> CA Réservations
+                                                </th>
+                                                <th width="26%">
+                                                    <i class="fas fa-bullhorn"></i> CA Diffusions Publicité
+                                                </th>
+                                                <th width="26%">
+                                                    <i class="fas fa-shopping-cart"></i> CA Ventes Produits
+                                                </th>
+                                                <th width="2%"></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <!-- Ligne CA Théorique -->
+                                            <tr>
+                                                <td class="label-col">
+                                                    <i class="fas fa-file-invoice"></i> CA Théorique
+                                                </td>
+                                                <td class="text-theorique">
+                                                    <span th:text="${#numbers.formatDecimal(stats.caReservationsTheorique, 0, 'COMMA', 0, 'POINT')}">0</span>
+                                                    <span th:text="${stats.deviseCode}">MGA</span>
+                                                </td>
+                                                <td class="text-theorique">
+                                                    <span th:text="${#numbers.formatDecimal(stats.caDiffusionsTheorique, 0, 'COMMA', 0, 'POINT')}">0</span>
+                                                    <span th:text="${stats.deviseCode}">MGA</span>
+                                                </td>
+                                                <td class="text-theorique">
+                                                    <span th:text="${#numbers.formatDecimal(stats.caVentesProduitsTheorique, 0, 'COMMA', 0, 'POINT')}">0</span>
+                                                    <span th:text="${stats.deviseCode}">MGA</span>
+                                                </td>
+                                                <td class="label-col text-center text-theorique">
+                                                    <strong th:text="${#numbers.formatDecimal(stats.totalTheorique, 0, 'COMMA', 0, 'POINT')} + ' ' + ${stats.deviseCode}">0 MGA</strong>
+                                                </td>
+                                            </tr>
+
+                                            <!-- Ligne CA Réel -->
+                                            <tr>
+                                                <td class="label-col">
+                                                    <i class="fas fa-money-bill-wave"></i> CA Réel (Payé)
+                                                </td>
+                                                <td class="text-reel">
+                                                    <span th:text="${#numbers.formatDecimal(stats.caReservationsReel, 0, 'COMMA', 0, 'POINT')}">0</span>
+                                                    <span th:text="${stats.deviseCode}">MGA</span>
+                                                </td>
+                                                <td class="text-reel">
+                                                    <span th:text="${#numbers.formatDecimal(stats.caDiffusionsReel, 0, 'COMMA', 0, 'POINT')}">0</span>
+                                                    <span th:text="${stats.deviseCode}">MGA</span>
+                                                </td>
+                                                <td class="text-reel">
+                                                    <span th:text="${#numbers.formatDecimal(stats.caVentesProduitsReel, 0, 'COMMA', 0, 'POINT')}">0</span>
+                                                    <span th:text="${stats.deviseCode}">MGA</span>
+                                                </td>
+                                                <td class="label-col text-center text-reel">
+                                                    <strong th:text="${#numbers.formatDecimal(stats.totalReel, 0, 'COMMA', 0, 'POINT')} + ' ' + ${stats.deviseCode}">0 MGA</strong>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Cards récapitulatives -->
+                    <div class="row">
+                        <div class="col-xl-6 col-md-6 mb-4">
+                            <div class="card border-left-primary shadow h-100 py-2">
+                                <div class="card-body">
+                                    <div class="row no-gutters align-items-center">
+                                        <div class="col mr-2">
+                                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                                Chiffre d'Affaires Théorique
+                                            </div>
+                                            <div class="h3 mb-0 font-weight-bold text-gray-800">
+                                                <span th:text="${#numbers.formatDecimal(stats.totalTheorique, 0, 'COMMA', 0, 'POINT')}">0</span>
+                                                <span th:text="${stats.deviseCode}">MGA</span>
+                                            </div>
+                                        </div>
+                                        <div class="col-auto">
+                                            <i class="fas fa-file-invoice-dollar fa-3x text-gray-300"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-xl-6 col-md-6 mb-4">
+                            <div class="card border-left-success shadow h-100 py-2">
+                                <div class="card-body">
+                                    <div class="row no-gutters align-items-center">
+                                        <div class="col mr-2">
+                                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                                Chiffre d'Affaires Réel (Encaissé)
+                                            </div>
+                                            <div class="h3 mb-0 font-weight-bold text-gray-800">
+                                                <span th:text="${#numbers.formatDecimal(stats.totalReel, 0, 'COMMA', 0, 'POINT')}">0</span>
+                                                <span th:text="${stats.deviseCode}">MGA</span>
+                                            </div>
+                                        </div>
+                                        <div class="col-auto">
+                                            <i class="fas fa-money-bill-wave fa-3x text-gray-300"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Taux de recouvrement -->
+                    <div class="row">
+                        <div class="col-lg-12">
+                            <div class="card border-left-warning mb-4">
+                                <div class="card-body">
+                                    <h6 class="font-weight-bold text-warning">
+                                        <i class="fas fa-percentage"></i> Taux de Recouvrement
+                                    </h6>
+                                    <div class="row">
+                                        <div class="col-md-4">
+                                            <strong>Réservations:</strong>
+                                            <span th:if="${stats.caReservationsTheorique > 0}"
+                                                  th:text="${#numbers.formatDecimal((stats.caReservationsReel / stats.caReservationsTheorique) * 100, 1, 'POINT', 2, 'COMMA')} + '%'">0%</span>
+                                            <span th:if="${stats.caReservationsTheorique == 0}">N/A</span>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <strong>Publicité:</strong>
+                                            <span th:if="${stats.caDiffusionsTheorique > 0}"
+                                                  th:text="${#numbers.formatDecimal((stats.caDiffusionsReel / stats.caDiffusionsTheorique) * 100, 1, 'POINT', 2, 'COMMA')} + '%'">0%</span>
+                                            <span th:if="${stats.caDiffusionsTheorique == 0}">N/A</span>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <strong>Global:</strong>
+                                            <span th:if="${stats.totalTheorique > 0}"
+                                                  th:text="${#numbers.formatDecimal((stats.totalReel / stats.totalTheorique) * 100, 1, 'POINT', 2, 'COMMA')} + '%'">0%</span>
+                                            <span th:if="${stats.totalTheorique == 0}">N/A</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <footer class="sticky-footer bg-white">
+                <div class="container my-auto">
+                    <div class="copyright text-center my-auto">
+                        <span>copyright &copy; <script>document.write(new Date().getFullYear());</script> - Gestion Taxi Brousse</span>
+                    </div>
+                </div>
+            </footer>
+        </div>
+    </div>
+
+    <script src="/vendor/jquery/jquery.min.js"></script>
+    <script src="/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="/vendor/jquery-easing/jquery.easing.min.js"></script>
+    <script src="/js/ruang-admin.min.js"></script>
+</body>
+</html>

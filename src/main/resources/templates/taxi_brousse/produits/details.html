@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title th:text="'Détails Produit - ' + ${produit.nom}">Détails Produit - Gestion Taxi Brousse</title>
+    <link href="/vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">
+    <link href="/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet" type="text/css">
+    <link href="/css/ruang-admin.min.css" rel="stylesheet">
+</head>
+
+<body id="page-top">
+    <div id="wrapper">
+        <!-- Sidebar -->
+        <div th:replace="~{taxi_brousse/fragments :: sidebar}"></div>
+
+        <div id="content-wrapper" class="d-flex flex-column">
+            <div id="content">
+                <!-- TopBar -->
+                <nav class="navbar navbar-expand navbar-light bg-navbar topbar mb-4 static-top">
+                    <button id="sidebarToggleTop" class="btn btn-link rounded-circle mr-3">
+                        <i class="fa fa-bars"></i>
+                    </button>
+                    <ul class="navbar-nav ml-auto">
+                        <div class="topbar-divider d-none d-sm-block"></div>
+                        <li class="nav-item dropdown no-arrow">
+                            <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-toggle="dropdown">
+                                <img class="img-profile rounded-circle" src="/img/boy.png" style="max-width: 60px">
+                                <span class="ml-2 d-none d-lg-inline text-white small">Administrateur</span>
+                            </a>
+                            <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in">
+                                <a class="dropdown-item" href="#">
+                                    <i class="fas fa-user fa-sm fa-fw mr-2 text-gray-400"></i> Profil
+                                </a>
+                                <div class="dropdown-divider"></div>
+                                <a class="dropdown-item" href="javascript:void(0);" data-toggle="modal" data-target="#logoutModal">
+                                    <i class="fas fa-sign-out-alt fa-sm fa-fw mr-2 text-gray-400"></i> Déconnexion
+                                </a>
+                            </div>
+                        </li>
+                    </ul>
+                </nav>
+
+                <!-- Container Fluid -->
+                <div class="container-fluid" id="container-wrapper">
+                    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+                        <h1 class="h3 mb-0 text-gray-800">
+                            <i class="fas fa-box"></i> Détails du Produit
+                        </h1>
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item"><a href="/">Home</a></li>
+                            <li class="breadcrumb-item"><a href="/produits">Produits</a></li>
+                            <li class="breadcrumb-item active">Détails</li>
+                        </ol>
+                    </div>
+
+                    <!-- Messages Flash -->
+                    <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
+                        <i class="fas fa-check-circle"></i> <span th:text="${success}"></span>
+                        <button type="button" class="close" data-dismiss="alert">
+                            <span>&times;</span>
+                        </button>
+                    </div>
+
+                    <div class="row">
+                        <!-- Informations principales -->
+                        <div class="col-lg-8">
+                            <div class="card mb-4">
+                                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                                    <h6 class="m-0 font-weight-bold text-primary">
+                                        <i class="fas fa-info-circle"></i> Informations du Produit
+                                    </h6>
+                                    <div>
+                                        <span class="badge badge-lg" 
+                                              th:classappend="${produit.actif ? 'badge-success' : 'badge-secondary'}"
+                                              th:text="${produit.actif ? 'Actif' : 'Inactif'}">Actif</span>
+                                    </div>
+                                </div>
+                                <div class="card-body">
+                                    <table class="table table-borderless">
+                                        <tbody>
+                                            <tr>
+                                                <td width="30%" class="font-weight-bold">Code:</td>
+                                                <td>
+                                                    <span class="badge badge-dark" th:text="${produit.code}">PROD-001</span>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td class="font-weight-bold">Nom:</td>
+                                                <td><h5 class="mb-0" th:text="${produit.nom}">Eau minérale</h5></td>
+                                            </tr>
+                                            <tr th:if="${produit.description}">
+                                                <td class="font-weight-bold">Description:</td>
+                                                <td th:text="${produit.description}">Description du produit</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="font-weight-bold">Catégorie:</td>
+                                                <td>
+                                                    <span class="badge badge-info badge-lg" 
+                                                          th:text="${produit.refCategorieProduitLibelle}">Boisson froide</span>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td class="font-weight-bold">Prix de vente:</td>
+                                                <td>
+                                                    <h4 class="text-success mb-0">
+                                                        <i class="fas fa-tag"></i>
+                                                        <span th:text="${#numbers.formatDecimal(produit.prixVente, 0, 'COMMA', 0, 'POINT')} + ' ' + ${produit.refDeviseCode}">1500 MGA</span>
+                                                    </h4>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td class="font-weight-bold">Devise:</td>
+                                                <td>
+                                                    <span th:text="${produit.refDeviseCode}">MGA</span>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td class="font-weight-bold">Date de création:</td>
+                                                <td>
+                                                    <i class="far fa-calendar-alt"></i>
+                                                    <span th:text="${#temporals.format(produit.createdAt, 'dd/MM/yyyy HH:mm')}">01/01/2025 10:00</span>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <!-- Statistiques (placeholder pour future implémentation) -->
+                            <div class="card mb-4">
+                                <div class="card-header py-3">
+                                    <h6 class="m-0 font-weight-bold text-primary">
+                                        <i class="fas fa-chart-line"></i> Statistiques de vente
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="alert alert-info">
+                                        <i class="fas fa-info-circle"></i> 
+                                        Les statistiques de vente seront disponibles après l'implémentation du module de vente.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Actions -->
+                        <div class="col-lg-4">
+                            <div class="card mb-4">
+                                <div class="card-header py-3">
+                                    <h6 class="m-0 font-weight-bold text-primary">
+                                        <i class="fas fa-cog"></i> Actions
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <a th:href="@{/produits/{id}/edit(id=${produit.id})}" 
+                                       class="btn btn-primary btn-block mb-2">
+                                        <i class="fas fa-edit"></i> Modifier
+                                    </a>
+                                    
+                                    <form th:action="@{/produits/{id}/toggle(id=${produit.id})}" method="post">
+                                        <button type="submit" class="btn btn-warning btn-block mb-2">
+                                            <i class="fas fa-toggle-on"></i>
+                                            <span th:text="${produit.actif ? 'Désactiver' : 'Activer'}">Activer/Désactiver</span>
+                                        </button>
+                                    </form>
+                                    
+                                    <button type="button" class="btn btn-danger btn-block mb-2" 
+                                            data-toggle="modal" data-target="#deleteModal">
+                                        <i class="fas fa-trash"></i> Supprimer
+                                    </button>
+                                    
+                                    <hr>
+                                    
+                                    <a href="/produits" class="btn btn-secondary btn-block">
+                                        <i class="fas fa-arrow-left"></i> Retour à la liste
+                                    </a>
+                                </div>
+                            </div>
+
+                            <!-- Informations supplémentaires -->
+                            <div class="card border-left-info mb-4">
+                                <div class="card-body">
+                                    <h6 class="font-weight-bold text-info">
+                                        <i class="fas fa-lightbulb"></i> À savoir
+                                    </h6>
+                                    <ul class="mb-0 small">
+                                        <li>Gérez le stock par départ dans le module Stock</li>
+                                        <li>Les ventes sont enregistrées par réservation</li>
+                                        <li>Le stock est mis à jour automatiquement</li>
+                                        <li>Les produits inactifs n'apparaissent pas dans les ventes</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Modal de confirmation de suppression -->
+                    <div class="modal fade" id="deleteModal" tabindex="-1">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header bg-danger text-white">
+                                    <h5 class="modal-title">
+                                        <i class="fas fa-exclamation-triangle"></i> Confirmer la suppression
+                                    </h5>
+                                    <button type="button" class="close text-white" data-dismiss="modal">
+                                        <span>&times;</span>
+                                    </button>
+                                </div>
+                                <div class="modal-body">
+                                    <p class="mb-0">
+                                        Êtes-vous sûr de vouloir supprimer le produit 
+                                        <strong th:text="${produit.nom}"></strong> ?
+                                    </p>
+                                    <p class="text-danger mt-2 mb-0">
+                                        <small>
+                                            <i class="fas fa-exclamation-circle"></i>
+                                            Cette action est irréversible et supprimera également tout le stock associé.
+                                        </small>
+                                    </p>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                                        <i class="fas fa-times"></i> Annuler
+                                    </button>
+                                    <form th:action="@{/produits/{id}/delete(id=${produit.id})}" method="post">
+                                        <button type="submit" class="btn btn-danger">
+                                            <i class="fas fa-trash"></i> Supprimer définitivement
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <footer class="sticky-footer bg-white">
+                <div class="container my-auto">
+                    <div class="copyright text-center my-auto">
+                        <span>copyright &copy; <script>document.write(new Date().getFullYear());</script> - Gestion Taxi Brousse</span>
+                    </div>
+                </div>
+            </footer>
+        </div>
+    </div>
+
+    <a class="scroll-to-top rounded" href="#page-top">
+        <i class="fas fa-angle-up"></i>
+    </a>
+
+    <script src="/vendor/jquery/jquery.min.js"></script>
+    <script src="/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="/vendor/jquery-easing/jquery.easing.min.js"></script>
+    <script src="/js/ruang-admin.min.js"></script>
+</body>
+</html>

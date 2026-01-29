@@ -12,8 +12,8 @@ Livrables obligatoires dans un fichier Markdown:
 
 Contraintes:
 - Utiliser un format ASCII comme dans l’exemple.
-- Mentionner les tables exactes (existantes et nouvelles).
-- Mentionner les endpoints et services impactés.
+- Mentionner les tables exactes (existantes et nouvelles impacte par la modification).
+- Mentionner et services impactés.
 
 Exemple d’ASCII attendu (style):
 ┌───────────────────────────┐

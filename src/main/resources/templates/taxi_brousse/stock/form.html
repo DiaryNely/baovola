@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <title>Ajouter un produit au stock</title>
+    <link href="/vendor/fontawesome-free/css/all.min.css" rel="stylesheet">
+    <link href="/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/css/ruang-admin.min.css" rel="stylesheet">
+</head>
+
+<body id="page-top">
+    <div id="wrapper">
+        <div th:replace="~{taxi_brousse/fragments :: sidebar}"></div>
+
+        <div id="content-wrapper" class="d-flex flex-column">
+            <div id="content">
+                <nav class="navbar navbar-expand navbar-light bg-navbar topbar mb-4 static-top">
+                    <button id="sidebarToggleTop" class="btn btn-link rounded-circle mr-3">
+                        <i class="fa fa-bars"></i>
+                    </button>
+                    <ul class="navbar-nav ml-auto">
+                        <div class="topbar-divider d-none d-sm-block"></div>
+                        <li class="nav-item dropdown no-arrow">
+                            <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-toggle="dropdown">
+                                <img class="img-profile rounded-circle" src="/img/boy.png" style="max-width: 60px">
+                                <span class="ml-2 d-none d-lg-inline text-white small">Administrateur</span>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+
+                <div class="container-fluid">
+                    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+                        <h1 class="h3 mb-0 text-gray-800">
+                            <i class="fas fa-box"></i> <span th:text="${stock.id == null ? 'Ajouter' : 'Modifier'}"></span> Produit au Stock
+                        </h1>
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item"><a href="/">Home</a></li>
+                            <li class="breadcrumb-item"><a href="/departs">Départs</a></li>
+                            <li class="breadcrumb-item"><a th:href="@{/departs/{id}(id=${depart.id})}" th:text="${depart.code}"></a></li>
+                            <li class="breadcrumb-item"><a th:href="@{/departs/{id}/stock(id=${depart.id})}">Stock</a></li>
+                            <li class="breadcrumb-item active">Formulaire</li>
+                        </ol>
+                    </div>
+
+                    <!-- Messages -->
+                    <div th:if="${error}" class="alert alert-danger alert-dismissible">
+                        <i class="fas fa-exclamation-circle"></i> <span th:text="${error}"></span>
+                        <button type="button" class="close" data-dismiss="alert"><span>&times;</span></button>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-lg-8 offset-lg-2">
+                            <div class="card mb-4">
+                                <div class="card-header py-3">
+                                    <h6 class="m-0 font-weight-bold text-primary">
+                                        <i class="fas fa-edit"></i> Informations du Stock
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <form th:action="@{/departs/{id}/stock/save(id=${depart.id})}" method="post" th:object="${stock}">
+                                        <input type="hidden" th:field="*{id}">
+                                        <input type="hidden" th:field="*{departId}">
+                                        <input type="hidden" th:field="*{quantiteVendue}">
+
+                                        <!-- Produit -->
+                                        <div class="form-group row">
+                                            <label class="col-sm-3 col-form-label">Produit <span class="text-danger">*</span></label>
+                                            <div class="col-sm-9">
+                                                <select class="form-control" th:field="*{produitId}" 
+                                                        th:disabled="${stock.id != null}"
+                                                        required id="produitSelect">
+                                                    <option value="">-- Sélectionner un produit --</option>
+                                                    <option th:each="produit : ${produits}" 
+                                                            th:value="${produit.id}" 
+                                                            th:text="${produit.nom + ' (' + produit.code + ') - ' + #numbers.formatDecimal(produit.prixVente, 0, 'COMMA', 0, 'POINT') + ' MGA'}"
+                                                            th:data-prix="${produit.prixVente}"
+                                                            th:data-devise="${produit.refDevise.id}"></option>
+                                                </select>
+                                                <small class="form-text text-muted">
+                                                    <span th:if="${stock.id != null}">Le produit ne peut pas être modifié</span>
+                                                    <span th:if="${stock.id == null}">Sélectionnez un produit du catalogue</span>
+                                                </small>
+                                            </div>
+                                        </div>
+
+                                        <!-- Quantité initiale -->
+                                        <div class="form-group row">
+                                            <label class="col-sm-3 col-form-label">Quantité initiale <span class="text-danger">*</span></label>
+                                            <div class="col-sm-9">
+                                                <input type="number" class="form-control" th:field="*{quantiteInitiale}" 
+                                                       min="0" required placeholder="Ex: 50">
+                                                <small class="form-text text-muted">Nombre d'unités embarquées</small>
+                                            </div>
+                                        </div>
+
+                                        <!-- Prix unitaire -->
+                                        <div class="form-group row">
+                                            <label class="col-sm-3 col-form-label">Prix unitaire <span class="text-danger">*</span></label>
+                                            <div class="col-sm-9">
+                                                <input type="number" class="form-control" th:field="*{prixUnitaire}" 
+                                                       step="0.01" min="0" required placeholder="0.00" id="prixInput">
+                                                <small class="form-text text-muted">Prix de vente pendant ce voyage (peut différer du prix catalogue)</small>
+                                            </div>
+                                        </div>
+
+                                        <!-- Devise -->
+                                        <div class="form-group row">
+                                            <label class="col-sm-3 col-form-label">Devise <span class="text-danger">*</span></label>
+                                            <div class="col-sm-9">
+                                                <select class="form-control" th:field="*{refDeviseId}" required>
+                                                    <option value="">-- Sélectionner --</option>
+                                                    <option th:each="devise : ${devises}" 
+                                                            th:value="${devise.id}" 
+                                                            th:text="${devise.code + ' - ' + devise.libelle}"></option>
+                                                </select>
+                                            </div>
+                                        </div>
+
+                                        <!-- Notes -->
+                                        <div class="form-group row">
+                                            <label class="col-sm-3 col-form-label">Notes</label>
+                                            <div class="col-sm-9">
+                                                <textarea class="form-control" th:field="*{notes}" 
+                                                          rows="2" placeholder="Notes optionnelles"></textarea>
+                                            </div>
+                                        </div>
+
+                                        <hr>
+
+                                        <!-- Boutons -->
+                                        <div class="form-group row">
+                                            <div class="col-sm-9 offset-sm-3">
+                                                <button type="submit" class="btn btn-primary">
+                                                    <i class="fas fa-save"></i> Enregistrer
+                                                </button>
+                                                <a th:href="@{/departs/{id}/stock(id=${depart.id})}" class="btn btn-secondary">
+                                                    <i class="fas fa-times"></i> Annuler
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+
+                            <!-- Aide -->
+                            <div class="card border-left-info mb-4">
+                                <div class="card-body">
+                                    <h6 class="font-weight-bold text-info"><i class="fas fa-info-circle"></i> Comment ça marche ?</h6>
+                                    <ul class="mb-0">
+                                        <li>Ajoutez les produits avant le départ ou en début de voyage</li>
+                                        <li>La quantité initiale = ce que vous embarquez</li>
+                                        <li>Le prix peut différer du prix catalogue (promotion, etc.)</li>
+                                        <li>Le stock sera automatiquement mis à jour lors des ventes</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <footer class="sticky-footer bg-white">
+                <div class="container my-auto">
+                    <div class="copyright text-center my-auto">
+                        <span>copyright &copy; <script>document.write(new Date().getFullYear());</script> - Gestion Taxi Brousse</span>
+                    </div>
+                </div>
+            </footer>
+        </div>
+    </div>
+
+    <script src="/vendor/jquery/jquery.min.js"></script>
+    <script src="/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="/vendor/jquery-easing/jquery.easing.min.js"></script>
+    <script src="/js/ruang-admin.min.js"></script>
+    <script>
+        // Auto-remplir le prix quand un produit est sélectionné
+        $('#produitSelect').change(function() {
+            var selected = $(this).find(':selected');
+            var prix = selected.data('prix');
+            var devise = selected.data('devise');
+            
+            if (prix) {
+                $('#prixInput').val(prix);
+            }
+            if (devise) {
+                $('select[name="refDeviseId"]').val(devise);
+            }
+        });
+    </script>
+</body>
+</html>

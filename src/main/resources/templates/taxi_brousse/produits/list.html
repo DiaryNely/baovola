@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Produits - Gestion Taxi Brousse</title>
+    <link href="/vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">
+    <link href="/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet" type="text/css">
+    <link href="/css/ruang-admin.min.css" rel="stylesheet">
+</head>
+
+<body id="page-top">
+    <div id="wrapper">
+        <!-- Sidebar -->
+        <div th:replace="~{taxi_brousse/fragments :: sidebar}"></div>
+
+        <div id="content-wrapper" class="d-flex flex-column">
+            <div id="content">
+                <!-- TopBar -->
+                <nav class="navbar navbar-expand navbar-light bg-navbar topbar mb-4 static-top">
+                    <button id="sidebarToggleTop" class="btn btn-link rounded-circle mr-3">
+                        <i class="fa fa-bars"></i>
+                    </button>
+                    <ul class="navbar-nav ml-auto">
+                        <div class="topbar-divider d-none d-sm-block"></div>
+                        <li class="nav-item dropdown no-arrow">
+                            <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-toggle="dropdown">
+                                <img class="img-profile rounded-circle" src="/img/boy.png" style="max-width: 60px">
+                                <span class="ml-2 d-none d-lg-inline text-white small">Administrateur</span>
+                            </a>
+                            <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in">
+                                <a class="dropdown-item" href="#">
+                                    <i class="fas fa-user fa-sm fa-fw mr-2 text-gray-400"></i> Profil
+                                </a>
+                                <div class="dropdown-divider"></div>
+                                <a class="dropdown-item" href="javascript:void(0);" data-toggle="modal" data-target="#logoutModal">
+                                    <i class="fas fa-sign-out-alt fa-sm fa-fw mr-2 text-gray-400"></i> Déconnexion
+                                </a>
+                            </div>
+                        </li>
+                    </ul>
+                </nav>
+
+                <!-- Container Fluid -->
+                <div class="container-fluid" id="container-wrapper">
+                    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+                        <h1 class="h3 mb-0 text-gray-800">
+                            <i class="fas fa-box"></i> Gestion des Produits
+                        </h1>
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item"><a href="/">Home</a></li>
+                            <li class="breadcrumb-item active">Produits</li>
+                        </ol>
+                    </div>
+
+                    <!-- Messages Flash -->
+                    <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
+                        <i class="fas fa-check-circle"></i> <span th:text="${success}"></span>
+                        <button type="button" class="close" data-dismiss="alert">
+                            <span>&times;</span>
+                        </button>
+                    </div>
+                    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <i class="fas fa-exclamation-circle"></i> <span th:text="${error}"></span>
+                        <button type="button" class="close" data-dismiss="alert">
+                            <span>&times;</span>
+                        </button>
+                    </div>
+
+                    <!-- Filtres et Actions -->
+                    <div class="row mb-3">
+                        <div class="col-lg-12">
+                            <div class="card">
+                                <div class="card-body">
+                                    <form method="get" action="/produits" class="form-inline">
+                                        <div class="form-group mr-2 mb-2">
+                                            <label class="mr-2">Catégorie:</label>
+                                            <select name="categorie" class="form-control">
+                                                <option value="">Toutes</option>
+                                                <option th:each="cat : ${categories}" 
+                                                        th:value="${cat.id}" 
+                                                        th:text="${cat.libelle}"
+                                                        th:selected="${cat.id == selectedCategorie}"></option>
+                                            </select>
+                                        </div>
+                                        <div class="form-group mr-2 mb-2">
+                                            <label class="mr-2">Statut:</label>
+                                            <select name="actif" class="form-control">
+                                                <option value="">Tous</option>
+                                                <option value="true" th:selected="${selectedActif == true}">Actif</option>
+                                                <option value="false" th:selected="${selectedActif == false}">Inactif</option>
+                                            </select>
+                                        </div>
+                                        <div class="form-group mr-2 mb-2">
+                                            <input type="text" name="search" class="form-control" placeholder="Rechercher..." 
+                                                   th:value="${search}">
+                                        </div>
+                                        <button type="submit" class="btn btn-primary mr-2 mb-2">
+                                            <i class="fas fa-search"></i> Rechercher
+                                        </button>
+                                        <a href="/produits" class="btn btn-secondary mr-2 mb-2">
+                                            <i class="fas fa-redo"></i> Réinitialiser
+                                        </a>
+                                        <a href="/produits/new" class="btn btn-success mb-2 ml-auto">
+                                            <i class="fas fa-plus"></i> Nouveau Produit
+                                        </a>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tableau des Produits -->
+                    <div class="row">
+                        <div class="col-lg-12">
+                            <div class="card mb-4">
+                                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                                    <h6 class="m-0 font-weight-bold text-primary">
+                                        Liste des Produits (<span th:text="${totalItems}">0</span>)
+                                    </h6>
+                                </div>
+                                <div class="table-responsive">
+                                    <table class="table align-items-center table-flush">
+                                        <thead class="thead-light">
+                                            <tr>
+                                                <th>Code</th>
+                                                <th>Nom</th>
+                                                <th>Catégorie</th>
+                                                <th>Prix</th>
+                                                <th>Statut</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr th:if="${#lists.isEmpty(produits)}">
+                                                <td colspan="6" class="text-center">Aucun produit trouvé</td>
+                                            </tr>
+                                            <tr th:each="produit : ${produits}">
+                                                <td><strong th:text="${produit.code}">PROD-001</strong></td>
+                                                <td>
+                                                    <span th:text="${produit.nom}">Eau minérale</span>
+                                                    <small class="d-block text-muted" th:if="${produit.description}" 
+                                                           th:text="${#strings.abbreviate(produit.description, 50)}"></small>
+                                                </td>
+                                                <td>
+                                                    <span class="badge badge-info" th:text="${produit.refCategorieProduitLibelle}">Boisson</span>
+                                                </td>
+                                                <td>
+                                                    <strong th:text="${#numbers.formatDecimal(produit.prixVente, 0, 'COMMA', 0, 'POINT')} + ' ' + ${produit.refDeviseCode}">1500 MGA</strong>
+                                                </td>
+                                                <td>
+                                                    <span class="badge" 
+                                                          th:classappend="${produit.actif ? 'badge-success' : 'badge-secondary'}"
+                                                          th:text="${produit.actif ? 'Actif' : 'Inactif'}">Actif</span>
+                                                </td>
+                                                <td>
+                                                    <a th:href="@{/produits/{id}(id=${produit.id})}" 
+                                                       class="btn btn-sm btn-info" title="Détails">
+                                                        <i class="fas fa-eye"></i>
+                                                    </a>
+                                                    <a th:href="@{/produits/{id}/edit(id=${produit.id})}" 
+                                                       class="btn btn-sm btn-primary" title="Modifier">
+                                                        <i class="fas fa-edit"></i>
+                                                    </a>
+                                                    <form th:action="@{/produits/{id}/toggle(id=${produit.id})}" 
+                                                          method="post" style="display: inline;">
+                                                        <button type="submit" class="btn btn-sm btn-warning" 
+                                                                title="Activer/Désactiver">
+                                                            <i class="fas fa-toggle-on"></i>
+                                                        </button>
+                                                    </form>
+                                                    <button type="button" class="btn btn-sm btn-danger" 
+                                                            data-toggle="modal" 
+                                                            th:data-target="'#deleteModal' + ${produit.id}"
+                                                            title="Supprimer">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+
+                                                    <!-- Modal de confirmation -->
+                                                    <div class="modal fade" th:id="'deleteModal' + ${produit.id}" tabindex="-1">
+                                                        <div class="modal-dialog">
+                                                            <div class="modal-content">
+                                                                <div class="modal-header">
+                                                                    <h5 class="modal-title">Confirmer la suppression</h5>
+                                                                    <button type="button" class="close" data-dismiss="modal">
+                                                                        <span>&times;</span>
+                                                                    </button>
+                                                                </div>
+                                                                <div class="modal-body">
+                                                                    Êtes-vous sûr de vouloir supprimer le produit 
+                                                                    <strong th:text="${produit.nom}"></strong> ?
+                                                                </div>
+                                                                <div class="modal-footer">
+                                                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuler</button>
+                                                                    <form th:action="@{/produits/{id}/delete(id=${produit.id})}" method="post">
+                                                                        <button type="submit" class="btn btn-danger">Supprimer</button>
+                                                                    </form>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                <!-- Pagination -->
+                                <div class="card-footer" th:if="${totalPages > 1}">
+                                    <nav>
+                                        <ul class="pagination justify-content-center mb-0">
+                                            <li class="page-item" th:classappend="${currentPage == 0 ? 'disabled' : ''}">
+                                                <a class="page-link" 
+                                                   th:href="@{/produits(page=${currentPage - 1}, size=${pageSize}, categorie=${selectedCategorie}, actif=${selectedActif}, search=${search})}">
+                                                    Précédent
+                                                </a>
+                                            </li>
+                                            <li class="page-item" 
+                                                th:each="i : ${#numbers.sequence(0, totalPages - 1)}"
+                                                th:classappend="${i == currentPage ? 'active' : ''}">
+                                                <a class="page-link" 
+                                                   th:href="@{/produits(page=${i}, size=${pageSize}, categorie=${selectedCategorie}, actif=${selectedActif}, search=${search})}"
+                                                   th:text="${i + 1}">1</a>
+                                            </li>
+                                            <li class="page-item" th:classappend="${currentPage == totalPages - 1 ? 'disabled' : ''}">
+                                                <a class="page-link" 
+                                                   th:href="@{/produits(page=${currentPage + 1}, size=${pageSize}, categorie=${selectedCategorie}, actif=${selectedActif}, search=${search})}">
+                                                    Suivant
+                                                </a>
+                                            </li>
+                                        </ul>
+                                    </nav>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <footer class="sticky-footer bg-white">
+                <div class="container my-auto">
+                    <div class="copyright text-center my-auto">
+                        <span>copyright &copy; <script>document.write(new Date().getFullYear());</script> - Gestion Taxi Brousse</span>
+                    </div>
+                </div>
+            </footer>
+        </div>
+    </div>
+
+    <a class="scroll-to-top rounded" href="#page-top">
+        <i class="fas fa-angle-up"></i>
+    </a>
+
+    <script src="/vendor/jquery/jquery.min.js"></script>
+    <script src="/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="/vendor/jquery-easing/jquery.easing.min.js"></script>
+    <script src="/js/ruang-admin.min.js"></script>
+</body>
+</html>

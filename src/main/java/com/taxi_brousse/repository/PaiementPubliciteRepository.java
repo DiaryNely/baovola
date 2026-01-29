@@ -63,5 +63,18 @@ public interface PaiementPubliciteRepository extends JpaRepository<PaiementPubli
             @Param("dateDebut") LocalDateTime dateDebut,
             @Param("dateFin") LocalDateTime dateFin
     );
+    
+    // Pour les statistiques CA - basé sur la date du départ
+    @Query("SELECT COALESCE(SUM(d.montantFacture), 0) FROM DepartPublicite d " +
+           "WHERE d.depart.dateHeureDepart BETWEEN :startDate AND :endDate")
+    BigDecimal sumMontantTotalByDateRange(@Param("startDate") LocalDateTime startDate, 
+                                         @Param("endDate") LocalDateTime endDate);
+    
+    @Query("SELECT COALESCE(SUM(p.montant), 0) FROM PaiementPublicite p " +
+           "JOIN p.societePublicitaire s " +
+           "JOIN DepartPublicite dp ON dp.publicite.societePublicitaire.id = s.id " +
+           "WHERE dp.depart.dateHeureDepart BETWEEN :startDate AND :endDate")
+    BigDecimal sumMontantPayeByDateRange(@Param("startDate") LocalDateTime startDate, 
+                                        @Param("endDate") LocalDateTime endDate);
 }
 

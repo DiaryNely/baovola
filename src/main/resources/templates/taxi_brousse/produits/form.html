@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title th:text="${produit.id == null ? 'Nouveau Produit' : 'Modifier Produit'} + ' - Gestion Taxi Brousse'">Produit - Gestion Taxi Brousse</title>
+    <link href="/vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">
+    <link href="/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet" type="text/css">
+    <link href="/css/ruang-admin.min.css" rel="stylesheet">
+</head>
+
+<body id="page-top">
+    <div id="wrapper">
+        <!-- Sidebar -->
+        <div th:replace="~{taxi_brousse/fragments :: sidebar}"></div>
+
+        <div id="content-wrapper" class="d-flex flex-column">
+            <div id="content">
+                <!-- TopBar -->
+                <nav class="navbar navbar-expand navbar-light bg-navbar topbar mb-4 static-top">
+                    <button id="sidebarToggleTop" class="btn btn-link rounded-circle mr-3">
+                        <i class="fa fa-bars"></i>
+                    </button>
+                    <ul class="navbar-nav ml-auto">
+                        <div class="topbar-divider d-none d-sm-block"></div>
+                        <li class="nav-item dropdown no-arrow">
+                            <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-toggle="dropdown">
+                                <img class="img-profile rounded-circle" src="/img/boy.png" style="max-width: 60px">
+                                <span class="ml-2 d-none d-lg-inline text-white small">Administrateur</span>
+                            </a>
+                            <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in">
+                                <a class="dropdown-item" href="#">
+                                    <i class="fas fa-user fa-sm fa-fw mr-2 text-gray-400"></i> Profil
+                                </a>
+                                <div class="dropdown-divider"></div>
+                                <a class="dropdown-item" href="javascript:void(0);" data-toggle="modal" data-target="#logoutModal">
+                                    <i class="fas fa-sign-out-alt fa-sm fa-fw mr-2 text-gray-400"></i> Déconnexion
+                                </a>
+                            </div>
+                        </li>
+                    </ul>
+                </nav>
+
+                <!-- Container Fluid -->
+                <div class="container-fluid" id="container-wrapper">
+                    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+                        <h1 class="h3 mb-0 text-gray-800">
+                            <i class="fas fa-box"></i> 
+                            <span th:text="${produit.id == null ? 'Nouveau Produit' : 'Modifier Produit'}">Produit</span>
+                        </h1>
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item"><a href="/">Home</a></li>
+                            <li class="breadcrumb-item"><a href="/produits">Produits</a></li>
+                            <li class="breadcrumb-item active" th:text="${produit.id == null ? 'Nouveau' : 'Modifier'}">Form</li>
+                        </ol>
+                    </div>
+
+                    <!-- Messages Flash -->
+                    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <i class="fas fa-exclamation-circle"></i> <span th:text="${error}"></span>
+                        <button type="button" class="close" data-dismiss="alert">
+                            <span>&times;</span>
+                        </button>
+                    </div>
+
+                    <!-- Formulaire -->
+                    <div class="row">
+                        <div class="col-lg-8 offset-lg-2">
+                            <div class="card mb-4">
+                                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                                    <h6 class="m-0 font-weight-bold text-primary">
+                                        <i class="fas fa-edit"></i> Informations du Produit
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <form th:action="@{/produits/save}" method="post" th:object="${produit}">
+                                        <input type="hidden" th:field="*{id}">
+                                        
+                                        <!-- Code -->
+                                        <div class="form-group row">
+                                            <label class="col-sm-3 col-form-label">Code <span class="text-danger">*</span></label>
+                                            <div class="col-sm-9">
+                                                <input type="text" class="form-control" th:field="*{code}" 
+                                                       th:readonly="${produit.id != null}" required>
+                                                <small class="form-text text-muted">Format: PROD-XXX (généré automatiquement)</small>
+                                            </div>
+                                        </div>
+
+                                        <!-- Nom -->
+                                        <div class="form-group row">
+                                            <label class="col-sm-3 col-form-label">Nom <span class="text-danger">*</span></label>
+                                            <div class="col-sm-9">
+                                                <input type="text" class="form-control" th:field="*{nom}" 
+                                                       placeholder="Ex: Eau minérale 500ml" required maxlength="200">
+                                            </div>
+                                        </div>
+
+                                        <!-- Description -->
+                                        <div class="form-group row">
+                                            <label class="col-sm-3 col-form-label">Description</label>
+                                            <div class="col-sm-9">
+                                                <textarea class="form-control" th:field="*{description}" 
+                                                          rows="3" placeholder="Description détaillée du produit"></textarea>
+                                            </div>
+                                        </div>
+
+                                        <!-- Catégorie -->
+                                        <div class="form-group row">
+                                            <label class="col-sm-3 col-form-label">Catégorie <span class="text-danger">*</span></label>
+                                            <div class="col-sm-9">
+                                                <select class="form-control" th:field="*{refCategorieProduitId}" required>
+                                                    <option value="">-- Sélectionner --</option>
+                                                    <option th:each="cat : ${categories}" 
+                                                            th:value="${cat.id}" 
+                                                            th:text="${cat.libelle}"></option>
+                                                </select>
+                                            </div>
+                                        </div>
+
+                                        <!-- Devise -->
+                                        <div class="form-group row">
+                                            <label class="col-sm-3 col-form-label">Devise <span class="text-danger">*</span></label>
+                                            <div class="col-sm-9">
+                                                <select class="form-control" th:field="*{refDeviseId}" required>
+                                                    <option value="">-- Sélectionner --</option>
+                                                    <option th:each="devise : ${devises}" 
+                                                            th:value="${devise.id}" 
+                                                            th:text="${devise.code + ' - ' + devise.libelle}"></option>
+                                                </select>
+                                            </div>
+                                        </div>
+
+                                        <!-- Prix de vente -->
+                                        <div class="form-group row">
+                                            <label class="col-sm-3 col-form-label">Prix de vente <span class="text-danger">*</span></label>
+                                            <div class="col-sm-9">
+                                                <input type="number" class="form-control" th:field="*{prixVente}" 
+                                                       step="0.01" min="0" placeholder="0.00" required>
+                                                <small class="form-text text-muted">Prix unitaire de vente</small>
+                                            </div>
+                                        </div>
+
+                                        <!-- Actif -->
+                                        <div class="form-group row">
+                                            <label class="col-sm-3 col-form-label">Statut</label>
+                                            <div class="col-sm-9">
+                                                <div class="custom-control custom-checkbox">
+                                                    <input type="checkbox" class="custom-control-input" 
+                                                           th:field="*{actif}" id="actif">
+                                                    <label class="custom-control-label" for="actif">Produit actif</label>
+                                                </div>
+                                                <small class="form-text text-muted">
+                                                    Décochez pour désactiver temporairement ce produit
+                                                </small>
+                                            </div>
+                                        </div>
+
+                                        <hr>
+
+                                        <!-- Boutons -->
+                                        <div class="form-group row">
+                                            <div class="col-sm-9 offset-sm-3">
+                                                <button type="submit" class="btn btn-primary">
+                                                    <i class="fas fa-save"></i> Enregistrer
+                                                </button>
+                                                <a href="/produits" class="btn btn-secondary">
+                                                    <i class="fas fa-times"></i> Annuler
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+
+                            <!-- Carte d'aide -->
+                            <div class="card mb-4 border-left-info">
+                                <div class="card-body">
+                                    <h6 class="font-weight-bold text-info">
+                                        <i class="fas fa-info-circle"></i> Informations
+                                    </h6>
+                                    <ul class="mb-0">
+                                        <li>Le code est généré automatiquement au format PROD-XXX</li>
+                                        <li>Les produits inactifs n'apparaissent pas dans les ventes</li>
+                                        <li>Le prix doit être supérieur à 0</li>
+                                        <li>La catégorie aide à organiser vos produits</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <footer class="sticky-footer bg-white">
+                <div class="container my-auto">
+                    <div class="copyright text-center my-auto">
+                        <span>copyright &copy; <script>document.write(new Date().getFullYear());</script> - Gestion Taxi Brousse</span>
+                    </div>
+                </div>
+            </footer>
+        </div>
+    </div>
+
+    <a class="scroll-to-top rounded" href="#page-top">
+        <i class="fas fa-angle-up"></i>
+    </a>
+
+    <script src="/vendor/jquery/jquery.min.js"></script>
+    <script src="/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="/vendor/jquery-easing/jquery.easing.min.js"></script>
+    <script src="/js/ruang-admin.min.js"></script>
+</body>
+</html>

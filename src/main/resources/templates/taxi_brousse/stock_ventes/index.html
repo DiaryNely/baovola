@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <title>Gestion Stock & Ventes - Taxi Brousse</title>
+    <link href="/vendor/fontawesome-free/css/all.min.css" rel="stylesheet">
+    <link href="/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/css/ruang-admin.min.css" rel="stylesheet">
+</head>
+
+<body id="page-top">
+    <div id="wrapper">
+        <div th:replace="~{taxi_brousse/fragments :: sidebar}"></div>
+
+        <div id="content-wrapper" class="d-flex flex-column">
+            <div id="content">
+                <nav class="navbar navbar-expand navbar-light bg-navbar topbar mb-4 static-top">
+                    <button id="sidebarToggleTop" class="btn btn-link rounded-circle mr-3">
+                        <i class="fa fa-bars"></i>
+                    </button>
+                    <ul class="navbar-nav ml-auto">
+                        <div class="topbar-divider d-none d-sm-block"></div>
+                        <li class="nav-item dropdown no-arrow">
+                            <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-toggle="dropdown">
+                                <img class="img-profile rounded-circle" src="/img/boy.png" style="max-width: 60px">
+                                <span class="ml-2 d-none d-lg-inline text-white small">Administrateur</span>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+
+                <div class="container-fluid">
+                    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+                        <h1 class="h3 mb-0 text-gray-800">
+                            <i class="fas fa-shopping-cart"></i> Gestion Stock & Ventes Produits
+                        </h1>
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item"><a href="/">Home</a></li>
+                            <li class="breadcrumb-item active">Stock & Ventes</li>
+                        </ol>
+                    </div>
+
+                    <!-- Sélection du départ -->
+                    <div class="row mb-4">
+                        <div class="col-lg-12">
+                            <div class="card border-left-primary">
+                                <div class="card-body">
+                                    <h6 class="font-weight-bold text-primary mb-3">
+                                        <i class="fas fa-bus"></i> Sélectionner un départ
+                                    </h6>
+                                    <form method="get" action="/stock-ventes" class="form-inline">
+                                        <label class="mr-2">Départ:</label>
+                                        <select name="departId" class="form-control mr-2" style="min-width: 400px;" required>
+                                            <option value="">-- Sélectionner un départ --</option>
+                                            <option th:each="depart : ${departs}" 
+                                                    th:value="${depart.id}" 
+                                                    th:text="${depart.code + ' - ' + depart.trajet.libelle + ' (' + #temporals.format(depart.dateHeureDepart, 'dd/MM/yyyy HH:mm') + ')'}"
+                                                    th:selected="${selectedDepartId != null && selectedDepartId == depart.id}"></option>
+                                        </select>
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="fas fa-search"></i> Afficher
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Informations du départ sélectionné -->
+                    <div th:if="${selectedDepart != null}" class="row mb-4">
+                        <div class="col-lg-12">
+                            <div class="card border-left-info">
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-3">
+                                            <strong>Code Départ:</strong><br>
+                                            <span class="h5" th:text="${selectedDepart.code}">DEP-001</span>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <strong>Trajet:</strong><br>
+                                            <span th:text="${selectedDepart.trajet.libelle}">Antananarivo - Toamasina</span>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <strong>Date/Heure:</strong><br>
+                                            <span th:text="${#temporals.format(selectedDepart.dateHeureDepart, 'dd/MM/yyyy HH:mm')}">29/01/2026 08:00</span>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <strong>Véhicule:</strong><br>
+                                            <span th:text="${selectedDepart.vehicule.immatriculation}">ABC 1234 TA</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Stats et actions -->
+                    <div th:if="${selectedDepart != null}" class="row">
+                        <!-- Card Stock -->
+                        <div class="col-xl-6 col-md-6 mb-4">
+                            <div class="card h-100">
+                                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                                    <h6 class="m-0 font-weight-bold text-primary">
+                                        <i class="fas fa-boxes"></i> Stock Produits
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row mb-3">
+                                        <div class="col-6">
+                                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                                Produits en stock
+                                            </div>
+                                            <div class="h4 mb-0 font-weight-bold text-gray-800">
+                                                <span th:text="${nbProduitsStock}">0</span>
+                                            </div>
+                                        </div>
+                                        <div class="col-6">
+                                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                                Valeur du stock
+                                            </div>
+                                            <div class="h4 mb-0 font-weight-bold text-success">
+                                                <span th:text="${#numbers.formatDecimal(valeurStock, 0, 'COMMA', 0, 'POINT')}">0</span> MGA
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <hr>
+                                    
+                                    <a th:href="@{/departs/{id}/stock(id=${selectedDepart.id})}" class="btn btn-primary btn-block">
+                                        <i class="fas fa-boxes"></i> Gérer le Stock
+                                    </a>
+                                    <small class="text-muted d-block mt-2">
+                                        <i class="fas fa-info-circle"></i> 
+                                        Ajoutez les produits disponibles pour ce départ
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Card Ventes -->
+                        <div class="col-xl-6 col-md-6 mb-4">
+                            <div class="card h-100">
+                                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                                    <h6 class="m-0 font-weight-bold text-success">
+                                        <i class="fas fa-cash-register"></i> Ventes Produits
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row mb-3">
+                                        <div class="col-6">
+                                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                                Nombre de ventes
+                                            </div>
+                                            <div class="h4 mb-0 font-weight-bold text-gray-800">
+                                                <span th:text="${nbVentes}">0</span>
+                                            </div>
+                                        </div>
+                                        <div class="col-6">
+                                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                                Chiffre d'affaires
+                                            </div>
+                                            <div class="h4 mb-0 font-weight-bold text-success">
+                                                <span th:text="${#numbers.formatDecimal(totalVentes, 0, 'COMMA', 0, 'POINT')}">0</span> MGA
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <hr>
+                                    
+                                    <a th:href="@{/departs/{id}/ventes(id=${selectedDepart.id})}" class="btn btn-success btn-block">
+                                        <i class="fas fa-cash-register"></i> Enregistrer des Ventes
+                                    </a>
+                                    <small class="text-muted d-block mt-2">
+                                        <i class="fas fa-info-circle"></i> 
+                                        Enregistrez les ventes de produits aux passagers
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Message si aucun départ sélectionné -->
+                    <div th:if="${selectedDepart == null}" class="row">
+                        <div class="col-lg-12">
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle fa-2x mb-3"></i>
+                                <h5>Sélectionnez un départ</h5>
+                                <p class="mb-0">
+                                    Utilisez le sélecteur ci-dessus pour choisir un départ et accéder à la gestion du stock et des ventes de produits.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Guide d'utilisation -->
+                    <div class="row mt-4">
+                        <div class="col-lg-12">
+                            <div class="card border-left-warning">
+                                <div class="card-body">
+                                    <h6 class="font-weight-bold text-warning">
+                                        <i class="fas fa-lightbulb"></i> Comment ça fonctionne ?
+                                    </h6>
+                                    <ol class="mb-0">
+                                        <li><strong>Sélectionnez un départ</strong> - Choisissez le départ pour lequel vous souhaitez gérer les produits</li>
+                                        <li><strong>Gérez le stock</strong> - Ajoutez les produits disponibles (boissons, snacks, etc.) avec leur quantité initiale</li>
+                                        <li><strong>Enregistrez les ventes</strong> - Pendant le voyage, enregistrez les ventes aux passagers</li>
+                                        <li><strong>Mise à jour automatique</strong> - Le stock est automatiquement mis à jour après chaque vente</li>
+                                    </ol>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <footer class="sticky-footer bg-white">
+                <div class="container my-auto">
+                    <div class="copyright text-center my-auto">
+                        <span>copyright &copy; <script>document.write(new Date().getFullYear());</script> - Gestion Taxi Brousse</span>
+                    </div>
+                </div>
+            </footer>
+        </div>
+    </div>
+
+    <script src="/vendor/jquery/jquery.min.js"></script>
+    <script src="/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="/vendor/jquery-easing/jquery.easing.min.js"></script>
+    <script src="/js/ruang-admin.min.js"></script>
+</body>
+</html>

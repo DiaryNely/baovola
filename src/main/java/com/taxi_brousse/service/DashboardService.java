@@ -24,7 +24,6 @@ import com.taxi_brousse.dto.RentabiliteTrajetDTO;
 import com.taxi_brousse.dto.RevenuMensuelDTO;
 import com.taxi_brousse.dto.StatistiquesFinancieresDTO;
 import com.taxi_brousse.entity.Depart;
-import com.taxi_brousse.entity.Paiement;
 import com.taxi_brousse.entity.Reservation;
 import com.taxi_brousse.entity.Vehicule;
 import com.taxi_brousse.entity.VehiculeSiegeConfig;
@@ -179,17 +178,14 @@ public class DashboardService {
     }
     
     private BigDecimal calculerChiffreAffaires(LocalDateTime start, LocalDateTime end) {
-        List<Paiement> paiements = paiementRepository.findAll().stream()
-                .filter(p -> p.getDatePaiement() != null &&
-                           p.getDatePaiement().isAfter(start) &&
-                           p.getDatePaiement().isBefore(end) &&
-                           p.getRefPaiementStatut() != null &&
-                           "VALIDE".equals(p.getRefPaiementStatut().getCode()))
-                .collect(Collectors.toList());
+        // Utiliser la même logique que getStatistiquesFinancieres : basé sur dateHeureDepart
+        // CA = montants payés des réservations dont le départ est dans la période
+        BigDecimal revenusReservations = reservationRepository.sumMontantPayeByDateRange(start, end);
         
-        return paiements.stream()
-                .map(Paiement::getMontant)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        // Ajouter les revenus publicités pour la période
+        BigDecimal revenusPublicites = paiementPubliciteRepository.sumMontantByDateRange(start, end);
+        
+        return revenusReservations.add(revenusPublicites);
     }
     
     private Double calculerTauxRemplissageMoyen() {
@@ -218,18 +214,17 @@ public class DashboardService {
                     capacite = depart.getVehicule().getNombrePlaces();
                 }
                 
-                // Compter les réservations pour ce départ
-                long nbReservations = reservationRepository.findAll().stream()
-                        .filter(r -> r.getDepart() != null && r.getDepart().getId().equals(depart.getId()))
-                        .count();
+                // Compter les PASSAGERS (pas les réservations) pour ce départ
+                Long nbPassagers = reservationRepository.countPassagersByDepartId(depart.getId());
                 
-                double taux = (double) nbReservations / capacite * 100.0;
+                double taux = (double) nbPassagers / capacite * 100.0;
                 totalTaux += taux;
                 count++;
             }
         }
         
-        return count > 0 ? totalTaux / count : 0.0;
+        return count > 0 ? BigDecimal.valueOf(totalTaux / count)
+                .setScale(2, RoundingMode.HALF_UP).doubleValue() : 0.0;
     }
     
     private List<AlerteDTO> genererAlertes(long vehiculesEnPanne, List<Depart> prochainsDeparts) {
@@ -254,15 +249,14 @@ public class DashboardService {
                     capacite = depart.getVehicule().getNombrePlaces();
                 }
                 
-                long nbReservations = reservationRepository.findAll().stream()
-                        .filter(r -> r.getDepart() != null && r.getDepart().getId().equals(depart.getId()))
-                        .count();
+                // Compter les PASSAGERS (pas les réservations) pour ce départ
+                Long nbPassagers = reservationRepository.countPassagersByDepartId(depart.getId());
                 
-                if (nbReservations >= capacite) {
+                if (nbPassagers >= capacite) {
                     AlerteDTO alerte = new AlerteDTO();
                     alerte.setType("info");
                     alerte.setTitre("Départ complet");
-                    alerte.setMessage("Départ " + depart.getCode() + " est complet (" + nbReservations + "/" + capacite + ")");
+                    alerte.setMessage("Départ " + depart.getCode() + " est complet (" + nbPassagers + "/" + capacite + ")");
                     alerte.setLien("/departs");
                     alertes.add(alerte);
                 }
@@ -273,11 +267,9 @@ public class DashboardService {
         LocalDateTime dans2h = LocalDateTime.now().plusHours(2);
         for (Depart depart : prochainsDeparts) {
             if (depart.getDateHeureDepart() != null && depart.getDateHeureDepart().isBefore(dans2h)) {
-                long nbReservations = reservationRepository.findAll().stream()
-                        .filter(r -> r.getDepart() != null && r.getDepart().getId().equals(depart.getId()))
-                        .count();
+                Long nbPassagers = reservationRepository.countPassagersByDepartId(depart.getId());
                 
-                if (nbReservations == 0) {
+                if (nbPassagers == 0) {
                     AlerteDTO alerte = new AlerteDTO();
                     alerte.setType("warning");
                     alerte.setTitre("Départ sans réservation");
@@ -371,9 +363,18 @@ public class DashboardService {
 
     private Integer getCapaciteEffective(Depart depart) {
         if (depart.getVehicule() != null) {
+            // Utiliser capaciteOverride si défini
+            if (depart.getCapaciteOverride() != null && depart.getCapaciteOverride() > 0) {
+                return depart.getCapaciteOverride();
+            }
+            // Sinon utiliser la configuration des sièges
             List<VehiculeSiegeConfig> sieges = vehiculeSiegeConfigRepository
                     .findByVehiculeIdOrderByRefSiegeCategorieOrdreAsc(depart.getVehicule().getId());
-            return sieges.size();
+            if (!sieges.isEmpty()) {
+                return sieges.size();
+            }
+            // Fallback: utiliser nombrePlaces du véhicule
+            return depart.getVehicule().getNombrePlaces();
         }
         return 0;
     }

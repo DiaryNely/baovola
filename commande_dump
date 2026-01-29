@@ -1,5 +1,5 @@
-pg_dump -U postgres -h localhost -p 5432 taxi_brousse > base-farany.sql
+pg_dump -U postgres -h localhost -p 5432 taxi_brousse > base-farany1.sql
 
-psql -U postgres -d taxi_brousse -f taxi_brousse_complet.sql
+psql -U postgres -d brousse -f base-farany1.sql
 
 

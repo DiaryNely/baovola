@@ -8,10 +8,13 @@
     <link href="/css/ruang-admin.min.css" rel="stylesheet">
     <style>
         .stats-table th {
-            background-color: #4e73df;
+            background: linear-gradient(135deg, #4e73df 0%, #224abe 100%);
             color: white;
             text-align: center;
             vertical-align: middle;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
         .stats-table td {
             text-align: right;
@@ -21,7 +24,8 @@
         .stats-table .label-col {
             text-align: left;
             font-weight: bold;
-            background-color: #f8f9fc;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            font-size: 1.05rem;
         }
         .stats-table .total-row {
             background-color: #e3f2fd;
@@ -29,9 +33,129 @@
         }
         .text-theorique {
             color: #4e73df;
+            font-weight: 600;
         }
         .text-reel {
             color: #1cc88a;
+            font-weight: 600;
+        }
+        
+        /* Cards avec animations */
+        .ca-card {
+            transition: all 0.3s ease;
+            border-radius: 15px;
+            overflow: hidden;
+        }
+        .ca-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+        }
+        
+        /* Badges stylés */
+        .ca-badge {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            margin: 5px;
+        }
+        .ca-badge-primary {
+            background: linear-gradient(135deg, #4e73df 0%, #224abe 100%);
+            color: white;
+        }
+        .ca-badge-success {
+            background: linear-gradient(135deg, #1cc88a 0%, #13855c 100%);
+            color: white;
+        }
+        .ca-badge-info {
+            background: linear-gradient(135deg, #36b9cc 0%, #258391 100%);
+            color: white;
+        }
+        
+        /* Statistiques en colonnes stylées */
+        .stat-col {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            border-left: 5px solid;
+            transition: all 0.3s ease;
+        }
+        .stat-col:hover {
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+            transform: translateX(5px);
+        }
+        .stat-col.reservations {
+            border-left-color: #4e73df;
+        }
+        .stat-col.publicite {
+            border-left-color: #f6c23e;
+        }
+        .stat-col.produits {
+            border-left-color: #1cc88a;
+        }
+        
+        .stat-icon {
+            font-size: 3rem;
+            opacity: 0.2;
+            position: absolute;
+            right: 20px;
+            top: 20px;
+        }
+        
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            margin: 10px 0;
+        }
+        
+        .stat-label {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #858796;
+            font-weight: 600;
+        }
+        
+        .stat-progress {
+            height: 8px;
+            border-radius: 10px;
+            background: #e3e6f0;
+            margin-top: 15px;
+            overflow: hidden;
+        }
+        
+        .stat-progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #4e73df 0%, #1cc88a 100%);
+            border-radius: 10px;
+            transition: width 1s ease;
+        }
+        
+        /* Détail départs */
+        .detail-table {
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .detail-table thead th {
+            background: linear-gradient(135deg, #4e73df 0%, #224abe 100%);
+            color: white;
+            border: none;
+            padding: 15px;
+            font-weight: 600;
+        }
+        .detail-table tbody tr {
+            transition: all 0.3s ease;
+        }
+        .detail-table tbody tr:hover {
+            background-color: #f8f9fc;
+            transform: scale(1.01);
+        }
+        .detail-table tbody td {
+            padding: 15px;
+            vertical-align: middle;
         }
     </style>
 </head>
@@ -111,19 +235,105 @@
                         </div>
                     </div>
 
-                    <!-- Légende -->
-                    <div class="row mb-3">
-                        <div class="col-lg-12">
-                            <div class="alert alert-info">
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <i class="fas fa-info-circle"></i>
-                                        <strong class="text-theorique">CA Théorique :</strong> Montant total attendu (facturé)
+                    
+
+                    <!-- Statistiques en colonnes modernes -->
+                    <div class="row mb-4">
+                        <!-- CA Réservations -->
+                        <div class="col-lg-4">
+                            <div class="stat-col reservations">
+                                <i class="fas fa-ticket-alt stat-icon text-primary"></i>
+                                <div class="stat-label">
+                                    <i class="fas fa-ticket-alt"></i> Réservations
+                                </div>
+                                <div class="stat-value text-theorique">
+                                    <span th:text="${#numbers.formatDecimal(stats.caReservationsTheorique, 0, 'COMMA', 0, 'POINT')}">0</span>
+                                    <small style="font-size: 1rem;" th:text="${stats.deviseCode}">MGA</small>
+                                </div>
+                                <div class="small text-muted">CA Théorique</div>
+                                
+                                <div class="stat-value text-reel mt-3">
+                                    <span th:text="${#numbers.formatDecimal(stats.caReservationsReel, 0, 'COMMA', 0, 'POINT')}">0</span>
+                                    <small style="font-size: 1rem;" th:text="${stats.deviseCode}">MGA</small>
+                                </div>
+                                <div class="small text-muted">CA Réel (Encaissé)</div>
+                                
+                                <div class="stat-progress">
+                                    <div class="stat-progress-bar" 
+                                         th:style="${'width: ' + (stats.caReservationsTheorique > 0 ? (stats.caReservationsReel / stats.caReservationsTheorique * 100) : 0) + '%'}">
                                     </div>
-                                    <div class="col-md-6">
-                                        <i class="fas fa-check-circle"></i>
-                                        <strong class="text-reel">CA Réel :</strong> Montant effectivement encaissé
+                                </div>
+                                <div class="text-right mt-2">
+                                    <span class="ca-badge ca-badge-primary" 
+                                          th:if="${stats.caReservationsTheorique > 0}"
+                                          th:text="${#numbers.formatDecimal((stats.caReservationsReel / stats.caReservationsTheorique) * 100, 1, 'POINT', 1, 'COMMA')} + '% encaissé'">0%</span>
+                                    <span class="ca-badge ca-badge-primary" th:if="${stats.caReservationsTheorique == 0}">N/A</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- CA Publicité -->
+                        <div class="col-lg-4">
+                            <div class="stat-col publicite">
+                                <i class="fas fa-bullhorn stat-icon text-warning"></i>
+                                <div class="stat-label">
+                                    <i class="fas fa-bullhorn"></i> Diffusions Publicité
+                                </div>
+                                <div class="stat-value text-theorique">
+                                    <span th:text="${#numbers.formatDecimal(stats.caDiffusionsTheorique, 0, 'COMMA', 0, 'POINT')}">0</span>
+                                    <small style="font-size: 1rem;" th:text="${stats.deviseCode}">MGA</small>
+                                </div>
+                                <div class="small text-muted">CA Théorique</div>
+                                
+                                <div class="stat-value text-reel mt-3">
+                                    <span th:text="${#numbers.formatDecimal(stats.caDiffusionsReel, 0, 'COMMA', 0, 'POINT')}">0</span>
+                                    <small style="font-size: 1rem;" th:text="${stats.deviseCode}">MGA</small>
+                                </div>
+                                <div class="small text-muted">CA Réel (Encaissé)</div>
+                                
+                                <div class="stat-progress">
+                                    <div class="stat-progress-bar" 
+                                         th:style="${'width: ' + (stats.caDiffusionsTheorique > 0 ? (stats.caDiffusionsReel / stats.caDiffusionsTheorique * 100) : 0) + '%'}">
                                     </div>
+                                </div>
+                                <div class="text-right mt-2">
+                                    <span class="ca-badge ca-badge-success" 
+                                          th:if="${stats.caDiffusionsTheorique > 0}"
+                                          th:text="${#numbers.formatDecimal((stats.caDiffusionsReel / stats.caDiffusionsTheorique) * 100, 1, 'POINT', 1, 'COMMA')} + '% encaissé'">0%</span>
+                                    <span class="ca-badge ca-badge-success" th:if="${stats.caDiffusionsTheorique == 0}">N/A</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- CA Produits -->
+                        <div class="col-lg-4">
+                            <div class="stat-col produits">
+                                <i class="fas fa-shopping-cart stat-icon text-success"></i>
+                                <div class="stat-label">
+                                    <i class="fas fa-shopping-cart"></i> Ventes Produits
+                                </div>
+                                <div class="stat-value text-theorique">
+                                    <span th:text="${#numbers.formatDecimal(stats.caVentesProduitsTheorique, 0, 'COMMA', 0, 'POINT')}">0</span>
+                                    <small style="font-size: 1rem;" th:text="${stats.deviseCode}">MGA</small>
+                                </div>
+                                <div class="small text-muted">CA Théorique (Stock)</div>
+                                
+                                <div class="stat-value text-reel mt-3">
+                                    <span th:text="${#numbers.formatDecimal(stats.caVentesProduitsReel, 0, 'COMMA', 0, 'POINT')}">0</span>
+                                    <small style="font-size: 1rem;" th:text="${stats.deviseCode}">MGA</small>
+                                </div>
+                                <div class="small text-muted">CA Réel (Vendu)</div>
+                                
+                                <div class="stat-progress">
+                                    <div class="stat-progress-bar" 
+                                         th:style="${'width: ' + (stats.caVentesProduitsTheorique > 0 ? (stats.caVentesProduitsReel / stats.caVentesProduitsTheorique * 100) : 0) + '%'}">
+                                    </div>
+                                </div>
+                                <div class="text-right mt-2">
+                                    <span class="ca-badge ca-badge-info" 
+                                          th:if="${stats.caVentesProduitsTheorique > 0}"
+                                          th:text="${#numbers.formatDecimal((stats.caVentesProduitsReel / stats.caVentesProduitsTheorique) * 100, 1, 'POINT', 1, 'COMMA')} + '% vendu'">0%</span>
+                                    <span class="ca-badge ca-badge-info" th:if="${stats.caVentesProduitsTheorique == 0}">N/A</span>
                                 </div>
                             </div>
                         </div>
@@ -132,11 +342,11 @@
                     <!-- Tableau des statistiques -->
                     <div class="row">
                         <div class="col-lg-12">
-                            <div class="card mb-4">
-                                <div class="card-header py-3">
-                                    <h6 class="m-0 font-weight-bold text-primary">
+                            <div class="card mb-4 shadow-lg" style="border-radius: 15px; border: none;">
+                                <div class="card-header py-3" style="background: linear-gradient(135deg, #4e73df 0%, #224abe 100%); border-radius: 15px 15px 0 0;">
+                                    <h6 class="m-0 font-weight-bold text-white">
                                         <i class="fas fa-table"></i> 
-                                        Chiffre d'Affaires - 
+                                        Récapitulatif - 
                                         <span th:text="${stats.mois == 1 ? 'Janvier' : stats.mois == 2 ? 'Février' : stats.mois == 3 ? 'Mars' : stats.mois == 4 ? 'Avril' : stats.mois == 5 ? 'Mai' : stats.mois == 6 ? 'Juin' : stats.mois == 7 ? 'Juillet' : stats.mois == 8 ? 'Août' : stats.mois == 9 ? 'Septembre' : stats.mois == 10 ? 'Octobre' : stats.mois == 11 ? 'Novembre' : 'Décembre'} + ' ' + ${stats.annee}">Janvier 2026</span>
                                     </h6>
                                 </div>
@@ -208,23 +418,28 @@
                         </div>
                     </div>
 
-                    <!-- Cards récapitulatives -->
+                    <!-- Cards récapitulatives avec design moderne -->
                     <div class="row">
                         <div class="col-xl-6 col-md-6 mb-4">
-                            <div class="card border-left-primary shadow h-100 py-2">
-                                <div class="card-body">
+                            <div class="card ca-card shadow-lg" style="border: none; border-left: 5px solid #4e73df; border-radius: 15px;">
+                                <div class="card-body" style="background: linear-gradient(135deg, #4e73df15 0%, #224abe15 100%);">
                                     <div class="row no-gutters align-items-center">
                                         <div class="col mr-2">
-                                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
-                                                Chiffre d'Affaires Théorique
+                                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1" style="letter-spacing: 1px;">
+                                                <i class="fas fa-file-invoice-dollar"></i> Chiffre d'Affaires Théorique
                                             </div>
-                                            <div class="h3 mb-0 font-weight-bold text-gray-800">
+                                            <div class="h2 mb-0 font-weight-bold" style="color: #4e73df;">
                                                 <span th:text="${#numbers.formatDecimal(stats.totalTheorique, 0, 'COMMA', 0, 'POINT')}">0</span>
-                                                <span th:text="${stats.deviseCode}">MGA</span>
+                                                <span style="font-size: 1.2rem;" th:text="${stats.deviseCode}">MGA</span>
+                                            </div>
+                                            <div class="mt-2">
+                                                <span class="ca-badge ca-badge-primary">
+                                                    <i class="fas fa-calculator"></i> Total Attendu
+                                                </span>
                                             </div>
                                         </div>
                                         <div class="col-auto">
-                                            <i class="fas fa-file-invoice-dollar fa-3x text-gray-300"></i>
+                                            <i class="fas fa-file-invoice-dollar fa-4x" style="color: #4e73df; opacity: 0.3;"></i>
                                         </div>
                                     </div>
                                 </div>
@@ -232,20 +447,25 @@
                         </div>
 
                         <div class="col-xl-6 col-md-6 mb-4">
-                            <div class="card border-left-success shadow h-100 py-2">
-                                <div class="card-body">
+                            <div class="card ca-card shadow-lg" style="border: none; border-left: 5px solid #1cc88a; border-radius: 15px;">
+                                <div class="card-body" style="background: linear-gradient(135deg, #1cc88a15 0%, #17a67315 100%);">
                                     <div class="row no-gutters align-items-center">
                                         <div class="col mr-2">
-                                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
-                                                Chiffre d'Affaires Réel (Encaissé)
+                                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1" style="letter-spacing: 1px;">
+                                                <i class="fas fa-money-bill-wave"></i> Chiffre d'Affaires Réel
                                             </div>
-                                            <div class="h3 mb-0 font-weight-bold text-gray-800">
+                                            <div class="h2 mb-0 font-weight-bold" style="color: #1cc88a;">
                                                 <span th:text="${#numbers.formatDecimal(stats.totalReel, 0, 'COMMA', 0, 'POINT')}">0</span>
-                                                <span th:text="${stats.deviseCode}">MGA</span>
+                                                <span style="font-size: 1.2rem;" th:text="${stats.deviseCode}">MGA</span>
+                                            </div>
+                                            <div class="mt-2">
+                                                <span class="ca-badge ca-badge-success">
+                                                    <i class="fas fa-check-circle"></i> Effectivement Encaissé
+                                                </span>
                                             </div>
                                         </div>
                                         <div class="col-auto">
-                                            <i class="fas fa-money-bill-wave fa-3x text-gray-300"></i>
+                                            <i class="fas fa-money-bill-wave fa-4x" style="color: #1cc88a; opacity: 0.3;"></i>
                                         </div>
                                     </div>
                                 </div>
@@ -253,31 +473,47 @@
                         </div>
                     </div>
 
-                    <!-- Taux de recouvrement -->
+                    <!-- Taux de recouvrement avec design moderne -->
                     <div class="row">
                         <div class="col-lg-12">
-                            <div class="card border-left-warning mb-4">
+                            <div class="card shadow-lg mb-4" style="border: none; border-radius: 15px; background: linear-gradient(135deg, #ffecd215 0%, #fcb69f15 100%);">
                                 <div class="card-body">
-                                    <h6 class="font-weight-bold text-warning">
-                                        <i class="fas fa-percentage"></i> Taux de Recouvrement
-                                    </h6>
+                                    <h5 class="font-weight-bold text-warning mb-4">
+                                        <i class="fas fa-chart-pie"></i> Taux de Recouvrement Global
+                                    </h5>
                                     <div class="row">
-                                        <div class="col-md-4">
-                                            <strong>Réservations:</strong>
-                                            <span th:if="${stats.caReservationsTheorique > 0}"
-                                                  th:text="${#numbers.formatDecimal((stats.caReservationsReel / stats.caReservationsTheorique) * 100, 1, 'POINT', 2, 'COMMA')} + '%'">0%</span>
-                                            <span th:if="${stats.caReservationsTheorique == 0}">N/A</span>
+                                        <div class="col-md-4 mb-3">
+                                            <div class="p-3 rounded" style="background: white; box-shadow: 0 3px 10px rgba(0,0,0,0.1);">
+                                                <div class="small text-muted mb-2">
+                                                    <i class="fas fa-ticket-alt"></i> Réservations
+                                                </div>
+                                                <div class="h3 font-weight-bold text-primary mb-0">
+                                                    <span th:if="${stats.caReservationsTheorique > 0}"
+                                                          th:text="${#numbers.formatDecimal((stats.caReservationsReel / stats.caReservationsTheorique) * 100, 1, 'POINT', 1, 'COMMA')} + '%'">0%</span>
+                                                    <span th:if="${stats.caReservationsTheorique == 0}">N/A</span>
+                                                </div>
+                                            </div>
                                         </div>
-                                        <div class="col-md-4">
-                                            <strong>Publicité:</strong>
-                                            <span th:if="${stats.caDiffusionsTheorique > 0}"
-                                                  th:text="${#numbers.formatDecimal((stats.caDiffusionsReel / stats.caDiffusionsTheorique) * 100, 1, 'POINT', 2, 'COMMA')} + '%'">0%</span>
-                                            <span th:if="${stats.caDiffusionsTheorique == 0}">N/A</span>
+                                        <div class="col-md-4 mb-3">
+                                            <div class="p-3 rounded" style="background: white; box-shadow: 0 3px 10px rgba(0,0,0,0.1);">
+                                                <div class="small text-muted mb-2">
+                                                    <i class="fas fa-bullhorn"></i> Publicité
+                                                </div>
+                                                <div class="h3 font-weight-bold text-warning mb-0">
+                                                    <span th:if="${stats.caDiffusionsTheorique > 0}"
+                                                          th:text="${#numbers.formatDecimal((stats.caDiffusionsReel / stats.caDiffusionsTheorique) * 100, 1, 'POINT', 1, 'COMMA')} + '%'">0%</span>
+                                                    <span th:if="${stats.caDiffusionsTheorique == 0}">N/A</span>
+                                                </div>
+                                            </div>
                                         </div>
-                                        <div class="col-md-4">
-                                            <strong>Global:</strong>
-                                            <span th:if="${stats.totalTheorique > 0}"
-                                                  th:text="${#numbers.formatDecimal((stats.totalReel / stats.totalTheorique) * 100, 1, 'POINT', 2, 'COMMA')} + '%'">0%</span>
+                                        <div class="col-md-4 mb-3">
+                                            <div class="p-3 rounded" style="background: white; box-shadow: 0 3px 10px rgba(0,0,0,0.1);">
+                                                <div class="small text-muted mb-2">
+                                                    <i class="fas fa-chart-line"></i> Global
+                                                </div>
+                                                <div class="h3 font-weight-bold text-success mb-0">
+                                                    <span th:if="${stats.totalTheorique > 0}"
+                                                          th:text="${#numbers.formatDecimal((stats.totalReel / stats.totalTheorique) * 100, 1, 'POINT', 1, 'COMMA')} + '%'">0%</span>
                                             <span th:if="${stats.totalTheorique == 0}">N/A</span>
                                         </div>
                                     </div>
@@ -286,106 +522,120 @@
                         </div>
                     </div>
 
-                    <!-- Tableau détaillé par départ -->
+                    <!-- Tableau détaillé par départ avec design moderne -->
                     <div class="row">
                         <div class="col-lg-12">
-                            <div class="card mb-4">
-                                <div class="card-header py-3">
-                                    <h6 class="m-0 font-weight-bold text-primary">
+                            <div class="card mb-4 shadow-lg" style="border: none; border-radius: 15px;">
+                                <div class="card-header py-3" style="background: linear-gradient(135deg, #4e73df 0%, #224abe 100%); border-radius: 15px 15px 0 0;">
+                                    <h6 class="m-0 font-weight-bold text-white">
                                         <i class="fas fa-list"></i> Détail par Départ
                                     </h6>
                                 </div>
                                 <div class="table-responsive">
-                                    <table class="table table-bordered table-hover" id="dataTable" width="100%" cellspacing="0">
-                                        <thead class="thead-light">
+                                    <table class="table detail-table mb-0" width="100%" cellspacing="0">
+                                        <thead>
                                             <tr>
-                                                <th>Code Départ</th>
-                                                <th>Date/Heure</th>
-                                                <th>Trajet</th>
-                                                <th class="text-right">CA Réservations<br><small>(Théo / Réel)</small></th>
-                                                <th class="text-right">CA Publicité<br><small>(Théo / Réel)</small></th>
-                                                <th class="text-right">CA Produits<br><small>(Théo / Réel)</small></th>
-                                                <th class="text-right">Total Théorique</th>
+                                                <th><i class="fas fa-barcode"></i> Code</th>
+                                                <th><i class="fas fa-calendar-alt"></i> Date/Heure</th>
+                                                <th><i class="fas fa-route"></i> Trajet</th>
+                                                <th class="text-right"><i class="fas fa-ticket-alt"></i> Réservations<br><small>(Théo / Réel)</small></th>
+                                                <th class="text-right"><i class="fas fa-bullhorn"></i> Publicité<br><small>(Théo / Réel)</small></th>
+                                                <th class="text-right"><i class="fas fa-shopping-cart"></i> Produits<br><small>(Théo / Réel)</small></th>
+                                                <th class="text-right"><i class="fas fa-calculator"></i> Total Théo</th>
                                                 <th class="text-right">Total Réel</th>
                                             </tr>
                                         </thead>
                                         <tbody>
                                             <tr th:each="depart : ${stats.departs}">
                                                 <td>
-                                                    <a th:href="@{/departs/{id}(id=${depart.id})}" 
-                                                       th:text="${depart.code}"
-                                                       class="font-weight-bold">DEP001</a>
+                                                    <span class="ca-badge ca-badge-primary" style="font-size: 0.85rem;" th:text="${depart.code}">DEP001</span>
                                                 </td>
                                                 <td>
+                                                    <i class="far fa-clock text-muted"></i>
                                                     <span th:text="${#temporals.format(depart.dateHeureDepart, 'dd/MM/yyyy HH:mm')}">01/01/2026 08:00</span>
                                                 </td>
                                                 <td>
-                                                    <span th:text="${depart.trajetLibelle}">Trajet</span>
+                                                    <i class="fas fa-map-marker-alt text-primary"></i>
+                                                    <span th:text="${depart.trajetLibelle}" class="font-weight-bold">Trajet</span>
                                                 </td>
                                                 <td class="text-right">
-                                                    <div class="text-theorique">
+                                                    <div class="text-theorique mb-1">
+                                                        <i class="fas fa-arrow-up" style="font-size: 0.7rem;"></i>
                                                         <span th:text="${#numbers.formatDecimal(depart.chiffreAffairesMax != null ? depart.chiffreAffairesMax : 0, 0, 'COMMA', 0, 'POINT')}">0</span>
                                                     </div>
                                                     <div class="text-reel">
+                                                        <i class="fas fa-arrow-down" style="font-size: 0.7rem;"></i>
                                                         <span th:text="${#numbers.formatDecimal(depart.chiffreAffaires != null ? depart.chiffreAffaires : 0, 0, 'COMMA', 0, 'POINT')}">0</span>
                                                     </div>
                                                 </td>
                                                 <td class="text-right">
-                                                    <div class="text-theorique">
+                                                    <div class="text-theorique mb-1">
+                                                        <i class="fas fa-arrow-up" style="font-size: 0.7rem;"></i>
                                                         <span th:text="${#numbers.formatDecimal(depart.montantDiffusionsPublicite != null ? depart.montantDiffusionsPublicite : 0, 0, 'COMMA', 0, 'POINT')}">0</span>
                                                     </div>
                                                     <div class="text-reel">
+                                                        <i class="fas fa-arrow-down" style="font-size: 0.7rem;"></i>
                                                         <span th:text="${#numbers.formatDecimal(depart.montantPublicitesPaye != null ? depart.montantPublicitesPaye : 0, 0, 'COMMA', 0, 'POINT')}">0</span>
                                                     </div>
                                                 </td>
                                                 <td class="text-right">
-                                                    <div class="text-theorique">
+                                                    <div class="text-theorique mb-1">
+                                                        <i class="fas fa-arrow-up" style="font-size: 0.7rem;"></i>
                                                         <span th:text="${#numbers.formatDecimal(depart.valeurStockInitial != null ? depart.valeurStockInitial : 0, 0, 'COMMA', 0, 'POINT')}">0</span>
                                                     </div>
                                                     <div class="text-reel">
+                                                        <i class="fas fa-arrow-down" style="font-size: 0.7rem;"></i>
                                                         <span th:text="${#numbers.formatDecimal(depart.montantVentesProduits != null ? depart.montantVentesProduits : 0, 0, 'COMMA', 0, 'POINT')}">0</span>
                                                     </div>
                                                 </td>
-                                                <td class="text-right font-weight-bold text-theorique">
-                                                    <span th:text="${#numbers.formatDecimal((depart.chiffreAffairesMax != null ? depart.chiffreAffairesMax : 0) + (depart.montantDiffusionsPublicite != null ? depart.montantDiffusionsPublicite : 0) + (depart.valeurStockInitial != null ? depart.valeurStockInitial : 0), 0, 'COMMA', 0, 'POINT')}">0</span>
+                                                <td class="text-right font-weight-bold">
+                                                    <span class="ca-badge ca-badge-primary" style="font-size: 0.9rem;" th:text="${#numbers.formatDecimal((depart.chiffreAffairesMax != null ? depart.chiffreAffairesMax : 0) + (depart.montantDiffusionsPublicite != null ? depart.montantDiffusionsPublicite : 0) + (depart.valeurStockInitial != null ? depart.valeurStockInitial : 0), 0, 'COMMA', 0, 'POINT')}">0</span>
                                                 </td>
-                                                <td class="text-right font-weight-bold text-reel">
-                                                    <span th:text="${#numbers.formatDecimal((depart.chiffreAffaires != null ? depart.chiffreAffaires : 0) + (depart.montantPublicitesPaye != null ? depart.montantPublicitesPaye : 0) + (depart.montantVentesProduits != null ? depart.montantVentesProduits : 0), 0, 'COMMA', 0, 'POINT')}">0</span>
+                                                <td class="text-right font-weight-bold">
+                                                    <span class="ca-badge ca-badge-success" style="font-size: 0.9rem;" th:text="${#numbers.formatDecimal((depart.chiffreAffaires != null ? depart.chiffreAffaires : 0) + (depart.montantPublicitesPaye != null ? depart.montantPublicitesPaye : 0) + (depart.montantVentesProduits != null ? depart.montantVentesProduits : 0), 0, 'COMMA', 0, 'POINT')}">0</span>
                                                 </td>
                                             </tr>
                                         </tbody>
-                                        <tfoot>
-                                            <tr class="font-weight-bold bg-light">
-                                                <td colspan="3" class="text-right">TOTAL:</td>
+                                        <tfoot style="background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);">
+                                            <tr class="font-weight-bold">
+                                                <td colspan="3" class="text-right" style="font-size: 1.1rem;">
+                                                    <i class="fas fa-calculator"></i> TOTAL:
+                                                </td>
                                                 <td class="text-right">
-                                                    <div class="text-theorique">
+                                                    <div class="text-theorique mb-1">
+                                                        <i class="fas fa-arrow-up" style="font-size: 0.7rem;"></i>
                                                         <span th:text="${#numbers.formatDecimal(stats.caReservationsTheorique, 0, 'COMMA', 0, 'POINT')}">0</span>
                                                     </div>
                                                     <div class="text-reel">
+                                                        <i class="fas fa-arrow-down" style="font-size: 0.7rem;"></i>
                                                         <span th:text="${#numbers.formatDecimal(stats.caReservationsReel, 0, 'COMMA', 0, 'POINT')}">0</span>
                                                     </div>
                                                 </td>
                                                 <td class="text-right">
-                                                    <div class="text-theorique">
+                                                    <div class="text-theorique mb-1">
+                                                        <i class="fas fa-arrow-up" style="font-size: 0.7rem;"></i>
                                                         <span th:text="${#numbers.formatDecimal(stats.caDiffusionsTheorique, 0, 'COMMA', 0, 'POINT')}">0</span>
                                                     </div>
                                                     <div class="text-reel">
+                                                        <i class="fas fa-arrow-down" style="font-size: 0.7rem;"></i>
                                                         <span th:text="${#numbers.formatDecimal(stats.caDiffusionsReel, 0, 'COMMA', 0, 'POINT')}">0</span>
                                                     </div>
                                                 </td>
                                                 <td class="text-right">
-                                                    <div class="text-theorique">
+                                                    <div class="text-theorique mb-1">
+                                                        <i class="fas fa-arrow-up" style="font-size: 0.7rem;"></i>
                                                         <span th:text="${#numbers.formatDecimal(stats.caVentesProduitsTheorique, 0, 'COMMA', 0, 'POINT')}">0</span>
                                                     </div>
                                                     <div class="text-reel">
+                                                        <i class="fas fa-arrow-down" style="font-size: 0.7rem;"></i>
                                                         <span th:text="${#numbers.formatDecimal(stats.caVentesProduitsReel, 0, 'COMMA', 0, 'POINT')}">0</span>
                                                     </div>
                                                 </td>
-                                                <td class="text-right text-theorique">
-                                                    <span th:text="${#numbers.formatDecimal(stats.totalTheorique, 0, 'COMMA', 0, 'POINT')}">0</span>
+                                                <td class="text-right">
+                                                    <span class="ca-badge ca-badge-primary" style="font-size: 1rem;" th:text="${#numbers.formatDecimal(stats.totalTheorique, 0, 'COMMA', 0, 'POINT')}">0</span>
                                                 </td>
-                                                <td class="text-right text-reel">
-                                                    <span th:text="${#numbers.formatDecimal(stats.totalReel, 0, 'COMMA', 0, 'POINT')}">0</span>
+                                                <td class="text-right">
+                                                    <span class="ca-badge ca-badge-success" style="font-size: 1rem;" th:text="${#numbers.formatDecimal(stats.totalReel, 0, 'COMMA', 0, 'POINT')}">0</span>
                                                 </td>
                                             </tr>
                                         </tfoot>

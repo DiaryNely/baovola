@@ -1,10 +1,15 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org"
-      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
-      layout:decorate="~{layout}">
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
 
 <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link href="/img/logo/logo.png" rel="icon">
     <title>Dashboard Financier - Taxi Brousse</title>
+    <link href="/vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">
+    <link href="/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet" type="text/css">
+    <link href="/css/ruang-admin.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <style>
         .stat-card {
@@ -13,13 +18,14 @@
             margin-bottom: 20px;
             box-shadow: 0 0 10px rgba(0,0,0,0.1);
         }
-        .stat-card-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
-        .stat-card-success { background: linear-gradient(135deg, #48c6ef 0%, #6f86d6 100%); color: white; }
-        .stat-card-warning { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; }
-        .stat-card-info { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; }
+        .stat-card-primary { background: linear-gradient(135deg, #4e73df 0%, #224abe 100%); color: white; }
+        .stat-card-success { background: linear-gradient(135deg, #1cc88a 0%, #13855c 100%); color: white; }
+        .stat-card-warning { background: linear-gradient(135deg, #f6c23e 0%, #dda20a 100%); color: white; }
+        .stat-card-info { background: linear-gradient(135deg, #36b9cc 0%, #258391 100%); color: white; }
+        .stat-card-danger { background: linear-gradient(135deg, #e74a3b 0%, #be2617 100%); color: white; }
         
         .stat-value {
-            font-size: 2rem;
+            font-size: 1.8rem;
             font-weight: bold;
             margin-top: 10px;
         }
@@ -29,7 +35,7 @@
         }
         .chart-container {
             position: relative;
-            height: 400px;
+            height: 350px;
             margin-bottom: 30px;
         }
         .filter-card {
@@ -42,262 +48,411 @@
         .export-btn {
             margin-left: 10px;
         }
+        .theorique-reel-table th, .theorique-reel-table td {
+            vertical-align: middle !important;
+        }
+        .badge-theorique { background-color: #858796; color: white; }
+        .badge-reel { background-color: #1cc88a; color: white; }
+        .badge-ecart-positif { background-color: #1cc88a; color: white; }
+        .badge-ecart-negatif { background-color: #e74a3b; color: white; }
     </style>
 </head>
 
-<body>
-<div layout:fragment="content">
-    <div class="container-fluid">
-        <!-- En-tête avec filtres et boutons d'export -->
-        <div class="d-sm-flex align-items-center justify-content-between mb-4">
-            <h1 class="h3 mb-0 text-gray-800">
-                <i class="fas fa-chart-line"></i> Dashboard Financier
-            </h1>
-            <div>
-                <a th:href="@{/dashboard/financier/export/excel(dateDebut=${dateDebut}, dateFin=${dateFin})}" 
-                   class="btn btn-success btn-sm export-btn">
-                    <i class="fas fa-file-excel"></i> Export Excel
-                </a>
-                <a th:href="@{/dashboard/financier/export/pdf(dateDebut=${dateDebut}, dateFin=${dateFin})}" 
-                   class="btn btn-danger btn-sm export-btn">
-                    <i class="fas fa-file-pdf"></i> Export PDF
-                </a>
-            </div>
-        </div>
-
-        <!-- Filtres de période -->
-        <div class="filter-card">
-            <form th:action="@{/dashboard/financier}" method="get" class="form-inline">
-                <label class="mr-2">Période:</label>
-                <input type="date" name="dateDebut" th:value="${dateDebut}" class="form-control mr-2" required />
-                <label class="mr-2">à</label>
-                <input type="date" name="dateFin" th:value="${dateFin}" class="form-control mr-2" required />
-                <button type="submit" class="btn btn-primary">
-                    <i class="fas fa-search"></i> Filtrer
-                </button>
-                <a th:href="@{/dashboard/financier}" class="btn btn-secondary ml-2">
-                    <i class="fas fa-redo"></i> Réinitialiser
-                </a>
-            </form>
-        </div>
-
-        <!-- Statistiques globales -->
-        <div class="row">
-            <div class="col-xl-3 col-md-6 mb-4">
-                <div class="stat-card stat-card-primary">
-                    <div class="stat-label">
-                        <i class="fas fa-coins"></i> Revenus Total
-                    </div>
-                    <div class="stat-value" th:text="${#numbers.formatDecimal(stats.revenusTotal, 0, 'POINT', 2, 'COMMA')} + ' Ar'">
-                        0 Ar
-                    </div>
-                    <small>CA + Publicités</small>
-                </div>
-            </div>
-
-            <div class="col-xl-3 col-md-6 mb-4">
-                <div class="stat-card stat-card-success">
-                    <div class="stat-label">
-                        <i class="fas fa-ticket-alt"></i> Revenus Réservations
-                    </div>
-                    <div class="stat-value" th:text="${#numbers.formatDecimal(stats.revenusReservations, 0, 'POINT', 2, 'COMMA')} + ' Ar'">
-                        0 Ar
-                    </div>
-                    <small th:text="${stats.nombreReservations} + ' réservations'">0 réservations</small>
-                </div>
-            </div>
-
-            <div class="col-xl-3 col-md-6 mb-4">
-                <div class="stat-card stat-card-warning">
-                    <div class="stat-label">
-                        <i class="fas fa-bullhorn"></i> Revenus Publicités
-                    </div>
-                    <div class="stat-value" th:text="${#numbers.formatDecimal(stats.revenusPublicites, 0, 'POINT', 2, 'COMMA')} + ' Ar'">
-                        0 Ar
-                    </div>
-                    <small>Paiements encaissés</small>
-                </div>
-            </div>
-
-            <div class="col-xl-3 col-md-6 mb-4">
-                <div class="stat-card stat-card-info">
-                    <div class="stat-label">
-                        <i class="fas fa-bus"></i> Taux de Remplissage
-                    </div>
-                    <div class="stat-value" th:text="${#numbers.formatDecimal(stats.tauxRemplissageMoyen, 0, 'POINT', 2, 'COMMA')} + ' %'">
-                        0 %
-                    </div>
-                    <small th:text="${stats.nombreDeparts} + ' départs'">0 départs</small>
-                </div>
-            </div>
-        </div>
-
-        <!-- Graphiques -->
-        <div class="row">
-            <!-- Évolution des revenus mensuels -->
-            <div class="col-xl-8 col-lg-7">
-                <div class="card shadow mb-4">
-                    <div class="card-header py-3">
-                        <h6 class="m-0 font-weight-bold text-primary">
-                            <i class="fas fa-chart-area"></i> Évolution des Revenus Mensuels
-                        </h6>
-                    </div>
-                    <div class="card-body">
-                        <div class="chart-container">
-                            <canvas id="revenusChart"></canvas>
+<body id="page-top">
+    <div id="wrapper">
+        <!-- Sidebar -->
+        <div th:replace="~{taxi_brousse/fragments :: sidebar}"></div>
+        
+        <div id="content-wrapper" class="d-flex flex-column">
+            <div id="content">
+                <!-- TopBar -->
+                <div th:replace="~{taxi_brousse/fragments :: topbar}"></div>
+                
+                <!-- Begin Page Content -->
+                <div class="container-fluid">
+                    <!-- En-tête avec filtres et boutons d'export -->
+                    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+                        <h1 class="h3 mb-0 text-gray-800">
+                            <i class="fas fa-chart-line"></i> Dashboard Financier
+                        </h1>
+                        <div>
+                            <a th:href="@{/dashboard/financier/export/excel(dateDebut=${dateDebut}, dateFin=${dateFin})}" 
+                               class="btn btn-success btn-sm export-btn">
+                                <i class="fas fa-file-excel"></i> Export Excel
+                            </a>
+                            <a th:href="@{/dashboard/financier/export/pdf(dateDebut=${dateDebut}, dateFin=${dateFin})}" 
+                               class="btn btn-danger btn-sm export-btn">
+                                <i class="fas fa-file-pdf"></i> Export PDF
+                            </a>
                         </div>
                     </div>
-                </div>
-            </div>
 
-            <!-- Répartition des revenus -->
-            <div class="col-xl-4 col-lg-5">
-                <div class="card shadow mb-4">
-                    <div class="card-header py-3">
-                        <h6 class="m-0 font-weight-bold text-primary">
-                            <i class="fas fa-chart-pie"></i> Répartition des Revenus
-                        </h6>
+                    <!-- Filtres de période -->
+                    <div class="filter-card">
+                        <form th:action="@{/dashboard/financier}" method="get" class="form-inline">
+                            <label class="mr-2">Période:</label>
+                            <input type="date" name="dateDebut" th:value="${dateDebut}" class="form-control mr-2" required />
+                            <label class="mr-2">à</label>
+                            <input type="date" name="dateFin" th:value="${dateFin}" class="form-control mr-2" required />
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-search"></i> Filtrer
+                            </button>
+                            <a th:href="@{/dashboard/financier}" class="btn btn-secondary ml-2">
+                                <i class="fas fa-redo"></i> Réinitialiser
+                            </a>
+                        </form>
                     </div>
-                    <div class="card-body">
-                        <div class="chart-container">
-                            <canvas id="repartitionChart"></canvas>
+
+                    <!-- Statistiques globales - Totaux -->
+                    <div class="row">
+                        <div class="col-xl-4 col-md-6 mb-4">
+                            <div class="stat-card stat-card-primary">
+                                <div class="stat-label">
+                                    <i class="fas fa-coins"></i> CA Total Réel
+                                </div>
+                                <div class="stat-value" th:text="${#numbers.formatDecimal(stats.totalReel ?: 0, 0, 'POINT', 0, 'COMMA')} + ' Ar'">
+                                    0 Ar
+                                </div>
+                                <small>Revenus encaissés</small>
+                            </div>
+                        </div>
+
+                        <div class="col-xl-4 col-md-6 mb-4">
+                            <div class="stat-card stat-card-info">
+                                <div class="stat-label">
+                                    <i class="fas fa-calculator"></i> CA Total Théorique
+                                </div>
+                                <div class="stat-value" th:text="${#numbers.formatDecimal(stats.totalTheorique ?: 0, 0, 'POINT', 0, 'COMMA')} + ' Ar'">
+                                    0 Ar
+                                </div>
+                                <small>Si toutes places étaient réservées</small>
+                            </div>
+                        </div>
+
+                        <div class="col-xl-4 col-md-6 mb-4">
+                            <div class="stat-card" 
+                                 th:classappend="${(stats.totalReel ?: 0) >= (stats.totalTheorique ?: 0)} ? 'stat-card-success' : 'stat-card-danger'">
+                                <div class="stat-label">
+                                    <i class="fas fa-exchange-alt"></i> Écart
+                                </div>
+                                <div class="stat-value" th:text="${#numbers.formatDecimal((stats.totalReel ?: 0) - (stats.totalTheorique ?: 0), 0, 'POINT', 0, 'COMMA')} + ' Ar'">
+                                    0 Ar
+                                </div>
+                                <small>Réel - Théorique</small>
+                            </div>
                         </div>
                     </div>
-                </div>
-            </div>
-        </div>
 
-        <!-- Graphique taux de remplissage -->
-        <div class="row">
-            <div class="col-xl-12">
-                <div class="card shadow mb-4">
-                    <div class="card-header py-3">
-                        <h6 class="m-0 font-weight-bold text-primary">
-                            <i class="fas fa-chart-line"></i> Taux de Remplissage Mensuel
-                        </h6>
-                    </div>
-                    <div class="card-body">
-                        <div class="chart-container">
-                            <canvas id="tauxRemplissageChart"></canvas>
+                    <!-- Détails par catégorie -->
+                    <div class="row">
+                        <div class="col-xl-4 col-md-6 mb-4">
+                            <div class="stat-card stat-card-success">
+                                <div class="stat-label">
+                                    <i class="fas fa-ticket-alt"></i> CA Réservations
+                                </div>
+                                <div class="stat-value" th:text="${#numbers.formatDecimal(stats.caReservationsReel ?: 0, 0, 'POINT', 0, 'COMMA')} + ' Ar'">
+                                    0 Ar
+                                </div>
+                                <small th:text="'Théorique: ' + ${#numbers.formatDecimal(stats.caReservationsTheorique ?: 0, 0, 'POINT', 0, 'COMMA')} + ' Ar'">
+                                    Théorique: 0 Ar
+                                </small>
+                            </div>
+                        </div>
+
+                        <div class="col-xl-4 col-md-6 mb-4">
+                            <div class="stat-card stat-card-warning">
+                                <div class="stat-label">
+                                    <i class="fas fa-bullhorn"></i> CA Diffusions Publicité
+                                </div>
+                                <div class="stat-value" th:text="${#numbers.formatDecimal(stats.caDiffusionsReel ?: 0, 0, 'POINT', 0, 'COMMA')} + ' Ar'">
+                                    0 Ar
+                                </div>
+                                <small th:text="'Théorique: ' + ${#numbers.formatDecimal(stats.caDiffusionsTheorique ?: 0, 0, 'POINT', 0, 'COMMA')} + ' Ar'">
+                                    Théorique: 0 Ar
+                                </small>
+                            </div>
+                        </div>
+
+                        <div class="col-xl-4 col-md-6 mb-4">
+                            <div class="stat-card stat-card-info">
+                                <div class="stat-label">
+                                    <i class="fas fa-shopping-cart"></i> CA Ventes Produits
+                                </div>
+                                <div class="stat-value" th:text="${#numbers.formatDecimal(stats.caVentesProduitsReel ?: 0, 0, 'POINT', 0, 'COMMA')} + ' Ar'">
+                                    0 Ar
+                                </div>
+                                <small th:text="'Théorique: ' + ${#numbers.formatDecimal(stats.caVentesProduitsTheorique ?: 0, 0, 'POINT', 0, 'COMMA')} + ' Ar'">
+                                    Théorique: 0 Ar
+                                </small>
+                            </div>
                         </div>
                     </div>
-                </div>
-            </div>
-        </div>
 
-        <!-- Tableau rentabilité par trajet -->
-        <div class="row">
-            <div class="col-xl-12">
-                <div class="card shadow mb-4">
-                    <div class="card-header py-3">
-                        <h6 class="m-0 font-weight-bold text-primary">
-                            <i class="fas fa-route"></i> Rentabilité par Trajet
-                        </h6>
-                    </div>
-                    <div class="card-body">
-                        <div class="table-responsive">
-                            <table class="table table-bordered table-hover" width="100%" cellspacing="0">
-                                <thead class="thead-light">
-                                    <tr>
-                                        <th>Itinéraire</th>
-                                        <th class="text-center">Départs</th>
-                                        <th class="text-center">Réservations</th>
-                                        <th class="text-right">Rev. Total</th>
-                                        <th class="text-right">Rev. Réservations</th>
-                                        <th class="text-right">Rev. Publicités</th>
-                                        <th class="text-center">Taux Remplissage</th>
-                                        <th class="text-right">Rev. Moyen/Départ</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr th:each="trajet : ${stats.rentabiliteParTrajet}">
-                                        <td><strong th:text="${trajet.itineraire}">Itinéraire</strong></td>
-                                        <td class="text-center" th:text="${trajet.nombreDeparts}">0</td>
-                                        <td class="text-center" th:text="${trajet.nombreReservations}">0</td>
-                                        <td class="text-right">
-                                            <span class="badge badge-success" 
-                                                  th:text="${#numbers.formatDecimal(trajet.revenusTotal, 0, 'POINT', 2, 'COMMA')} + ' Ar'">
-                                                0 Ar
-                                            </span>
-                                        </td>
-                                        <td class="text-right" 
-                                            th:text="${#numbers.formatDecimal(trajet.revenusReservations, 0, 'POINT', 2, 'COMMA')} + ' Ar'">
-                                            0 Ar
-                                        </td>
-                                        <td class="text-right" 
-                                            th:text="${#numbers.formatDecimal(trajet.revenusPublicites, 0, 'POINT', 2, 'COMMA')} + ' Ar'">
-                                            0 Ar
-                                        </td>
-                                        <td class="text-center">
-                                            <div class="progress" style="height: 25px;">
-                                                <div class="progress-bar" role="progressbar" 
-                                                     th:style="'width: ' + ${trajet.tauxRemplissageMoyen} + '%'"
-                                                     th:text="${#numbers.formatDecimal(trajet.tauxRemplissageMoyen, 0, 'POINT', 1, 'COMMA')} + '%'">
-                                                    0%
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td class="text-right" 
-                                            th:text="${#numbers.formatDecimal(trajet.revenuMoyenParDepart, 0, 'POINT', 2, 'COMMA')} + ' Ar'">
-                                            0 Ar
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
+                    <!-- Graphiques -->
+                    <div class="row">
+                        <!-- Répartition Théorique vs Réel -->
+                        <div class="col-xl-6 col-lg-6">
+                            <div class="card shadow mb-4">
+                                <div class="card-header py-3">
+                                    <h6 class="m-0 font-weight-bold text-primary">
+                                        <i class="fas fa-chart-bar"></i> Comparaison Théorique vs Réel
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="chart-container">
+                                        <canvas id="comparaisonChart"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Répartition des revenus réels -->
+                        <div class="col-xl-6 col-lg-6">
+                            <div class="card shadow mb-4">
+                                <div class="card-header py-3">
+                                    <h6 class="m-0 font-weight-bold text-primary">
+                                        <i class="fas fa-chart-pie"></i> Répartition des Revenus Réels
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="chart-container">
+                                        <canvas id="repartitionChart"></canvas>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                </div>
-            </div>
-        </div>
 
-        <!-- Statistiques par statut -->
-        <div class="row">
-            <div class="col-xl-6">
-                <div class="card shadow mb-4">
-                    <div class="card-header py-3">
-                        <h6 class="m-0 font-weight-bold text-primary">
-                            <i class="fas fa-chart-bar"></i> Répartition des Départs par Statut
-                        </h6>
-                    </div>
-                    <div class="card-body">
-                        <div class="chart-container">
-                            <canvas id="statutChart"></canvas>
+                    <!-- Tableau récapitulatif -->
+                    <div class="row">
+                        <div class="col-xl-12">
+                            <div class="card shadow mb-4">
+                                <div class="card-header py-3">
+                                    <h6 class="m-0 font-weight-bold text-primary">
+                                        <i class="fas fa-table"></i> Récapitulatif Chiffre d'Affaires
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="table-responsive">
+                                        <table class="table table-bordered theorique-reel-table" width="100%">
+                                            <thead class="thead-light">
+                                                <tr>
+                                                    <th>Catégorie</th>
+                                                    <th class="text-right">CA Théorique</th>
+                                                    <th class="text-right">CA Réel</th>
+                                                    <th class="text-right">Écart</th>
+                                                    <th class="text-center">Taux de réalisation</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr>
+                                                    <td><i class="fas fa-ticket-alt text-success"></i> <strong>Réservations</strong></td>
+                                                    <td class="text-right">
+                                                        <span class="badge badge-theorique" 
+                                                              th:text="${#numbers.formatDecimal(stats.caReservationsTheorique ?: 0, 0, 'POINT', 0, 'COMMA')} + ' Ar'">0 Ar</span>
+                                                    </td>
+                                                    <td class="text-right">
+                                                        <span class="badge badge-reel" 
+                                                              th:text="${#numbers.formatDecimal(stats.caReservationsReel ?: 0, 0, 'POINT', 0, 'COMMA')} + ' Ar'">0 Ar</span>
+                                                    </td>
+                                                    <td class="text-right">
+                                                        <span th:with="ecart=${(stats.caReservationsReel ?: 0) - (stats.caReservationsTheorique ?: 0)}"
+                                                              th:class="${ecart >= 0} ? 'badge badge-ecart-positif' : 'badge badge-ecart-negatif'"
+                                                              th:text="${#numbers.formatDecimal(ecart, 0, 'POINT', 0, 'COMMA')} + ' Ar'">0 Ar</span>
+                                                    </td>
+                                                    <td class="text-center">
+                                                        <th:block th:with="theorique=${stats.caReservationsTheorique ?: 0}, reel=${stats.caReservationsReel ?: 0}">
+                                                            <div class="progress" style="height: 25px;" th:if="${theorique > 0}">
+                                                                <div class="progress-bar bg-success" role="progressbar" 
+                                                                     th:style="'width: ' + ${T(java.lang.Math).min(100, (reel * 100 / theorique))} + '%'"
+                                                                     th:text="${#numbers.formatDecimal(reel * 100 / theorique, 0, 'POINT', 1, 'COMMA')} + '%'">
+                                                                    0%
+                                                                </div>
+                                                            </div>
+                                                            <span th:unless="${theorique > 0}">N/A</span>
+                                                        </th:block>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td><i class="fas fa-bullhorn text-warning"></i> <strong>Diffusions Publicité</strong></td>
+                                                    <td class="text-right">
+                                                        <span class="badge badge-theorique" 
+                                                              th:text="${#numbers.formatDecimal(stats.caDiffusionsTheorique ?: 0, 0, 'POINT', 0, 'COMMA')} + ' Ar'">0 Ar</span>
+                                                    </td>
+                                                    <td class="text-right">
+                                                        <span class="badge badge-reel" 
+                                                              th:text="${#numbers.formatDecimal(stats.caDiffusionsReel ?: 0, 0, 'POINT', 0, 'COMMA')} + ' Ar'">0 Ar</span>
+                                                    </td>
+                                                    <td class="text-right">
+                                                        <span th:with="ecart=${(stats.caDiffusionsReel ?: 0) - (stats.caDiffusionsTheorique ?: 0)}"
+                                                              th:class="${ecart >= 0} ? 'badge badge-ecart-positif' : 'badge badge-ecart-negatif'"
+                                                              th:text="${#numbers.formatDecimal(ecart, 0, 'POINT', 0, 'COMMA')} + ' Ar'">0 Ar</span>
+                                                    </td>
+                                                    <td class="text-center">
+                                                        <th:block th:with="theorique=${stats.caDiffusionsTheorique ?: 0}, reel=${stats.caDiffusionsReel ?: 0}">
+                                                            <div class="progress" style="height: 25px;" th:if="${theorique > 0}">
+                                                                <div class="progress-bar bg-warning" role="progressbar" 
+                                                                     th:style="'width: ' + ${T(java.lang.Math).min(100, (reel * 100 / theorique))} + '%'"
+                                                                     th:text="${#numbers.formatDecimal(reel * 100 / theorique, 0, 'POINT', 1, 'COMMA')} + '%'">
+                                                                    0%
+                                                                </div>
+                                                            </div>
+                                                            <span th:unless="${theorique > 0}">N/A</span>
+                                                        </th:block>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td><i class="fas fa-shopping-cart text-info"></i> <strong>Ventes Produits</strong></td>
+                                                    <td class="text-right">
+                                                        <span class="badge badge-theorique" 
+                                                              th:text="${#numbers.formatDecimal(stats.caVentesProduitsTheorique ?: 0, 0, 'POINT', 0, 'COMMA')} + ' Ar'">0 Ar</span>
+                                                    </td>
+                                                    <td class="text-right">
+                                                        <span class="badge badge-reel" 
+                                                              th:text="${#numbers.formatDecimal(stats.caVentesProduitsReel ?: 0, 0, 'POINT', 0, 'COMMA')} + ' Ar'">0 Ar</span>
+                                                    </td>
+                                                    <td class="text-right">
+                                                        <span th:with="ecart=${(stats.caVentesProduitsReel ?: 0) - (stats.caVentesProduitsTheorique ?: 0)}"
+                                                              th:class="${ecart >= 0} ? 'badge badge-ecart-positif' : 'badge badge-ecart-negatif'"
+                                                              th:text="${#numbers.formatDecimal(ecart, 0, 'POINT', 0, 'COMMA')} + ' Ar'">0 Ar</span>
+                                                    </td>
+                                                    <td class="text-center">
+                                                        <th:block th:with="theorique=${stats.caVentesProduitsTheorique ?: 0}, reel=${stats.caVentesProduitsReel ?: 0}">
+                                                            <div class="progress" style="height: 25px;" th:if="${theorique > 0}">
+                                                                <div class="progress-bar bg-info" role="progressbar" 
+                                                                     th:style="'width: ' + ${T(java.lang.Math).min(100, (reel * 100 / theorique))} + '%'"
+                                                                     th:text="${#numbers.formatDecimal(reel * 100 / theorique, 0, 'POINT', 1, 'COMMA')} + '%'">
+                                                                    0%
+                                                                </div>
+                                                            </div>
+                                                            <span th:unless="${theorique > 0}">N/A</span>
+                                                        </th:block>
+                                                    </td>
+                                                </tr>
+                                                <tr class="table-primary font-weight-bold">
+                                                    <td><i class="fas fa-coins"></i> <strong>TOTAL</strong></td>
+                                                    <td class="text-right">
+                                                        <span class="badge badge-theorique" 
+                                                              th:text="${#numbers.formatDecimal(stats.totalTheorique ?: 0, 0, 'POINT', 0, 'COMMA')} + ' Ar'">0 Ar</span>
+                                                    </td>
+                                                    <td class="text-right">
+                                                        <span class="badge badge-reel" 
+                                                              th:text="${#numbers.formatDecimal(stats.totalReel ?: 0, 0, 'POINT', 0, 'COMMA')} + ' Ar'">0 Ar</span>
+                                                    </td>
+                                                    <td class="text-right">
+                                                        <span th:with="ecart=${(stats.totalReel ?: 0) - (stats.totalTheorique ?: 0)}"
+                                                              th:class="${ecart >= 0} ? 'badge badge-ecart-positif' : 'badge badge-ecart-negatif'"
+                                                              th:text="${#numbers.formatDecimal(ecart, 0, 'POINT', 0, 'COMMA')} + ' Ar'">0 Ar</span>
+                                                    </td>
+                                                    <td class="text-center">
+                                                        <th:block th:with="theorique=${stats.totalTheorique ?: 0}, reel=${stats.totalReel ?: 0}">
+                                                            <div class="progress" style="height: 25px;" th:if="${theorique > 0}">
+                                                                <div class="progress-bar bg-primary" role="progressbar" 
+                                                                     th:style="'width: ' + ${T(java.lang.Math).min(100, (reel * 100 / theorique))} + '%'"
+                                                                     th:text="${#numbers.formatDecimal(reel * 100 / theorique, 0, 'POINT', 1, 'COMMA')} + '%'">
+                                                                    0%
+                                                                </div>
+                                                            </div>
+                                                            <span th:unless="${theorique > 0}">N/A</span>
+                                                        </th:block>
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
+
+                    <!-- Détail des départs -->
+                    <div class="row" th:if="${stats.departs != null and !stats.departs.isEmpty()}">
+                        <div class="col-xl-12">
+                            <div class="card shadow mb-4">
+                                <div class="card-header py-3">
+                                    <h6 class="m-0 font-weight-bold text-primary">
+                                        <i class="fas fa-bus"></i> Détail par Départ
+                                        <span class="badge badge-primary ml-2" th:text="${stats.departs.size()} + ' départs'">0 départs</span>
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="table-responsive">
+                                        <table class="table table-bordered table-hover" width="100%">
+                                            <thead class="thead-light">
+                                                <tr>
+                                                    <th>Date</th>
+                                                    <th>Trajet</th>
+                                                    <th>Véhicule</th>
+                                                    <th class="text-right">CA Réservations</th>
+                                                    <th class="text-right">CA Publicités</th>
+                                                    <th class="text-right">CA Produits</th>
+                                                    <th class="text-right">Total</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr th:each="depart : ${stats.departs}">
+                                                    <td th:text="${#temporals.format(depart.dateHeureDepart, 'dd/MM/yyyy HH:mm')}">01/01/2024</td>
+                                                    <td th:text="${depart.trajetNom}">Trajet</td>
+                                                    <td th:text="${depart.vehiculeImmatriculation}">Véhicule</td>
+                                                    <td class="text-right" th:text="${#numbers.formatDecimal(depart.chiffreAffaires ?: 0, 0, 'POINT', 0, 'COMMA')} + ' Ar'">0 Ar</td>
+                                                    <td class="text-right" th:text="${#numbers.formatDecimal(depart.montantPublicitesPaye ?: 0, 0, 'POINT', 0, 'COMMA')} + ' Ar'">0 Ar</td>
+                                                    <td class="text-right" th:text="${#numbers.formatDecimal(depart.montantVentesProduits ?: 0, 0, 'POINT', 0, 'COMMA')} + ' Ar'">0 Ar</td>
+                                                    <td class="text-right font-weight-bold">
+                                                        <span th:with="total=${(depart.chiffreAffaires ?: 0) + (depart.montantPublicitesPaye ?: 0) + (depart.montantVentesProduits ?: 0)}"
+                                                              th:text="${#numbers.formatDecimal(total, 0, 'POINT', 0, 'COMMA')} + ' Ar'">0 Ar</span>
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
+                <!-- /.container-fluid -->
             </div>
+            
+            <!-- Footer -->
+            <div th:replace="~{taxi_brousse/fragments :: footer}"></div>
         </div>
     </div>
 
+    <!-- Scripts -->
+    <script src="/vendor/jquery/jquery.min.js"></script>
+    <script src="/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="/vendor/jquery-easing/jquery.easing.min.js"></script>
+    <script src="/js/ruang-admin.min.js"></script>
+    
     <script th:inline="javascript">
         /*<![CDATA[*/
         // Données Thymeleaf
-        const stats = /*[[${stats}]]*/ {};
-        
-        // Graphique évolution des revenus mensuels
-        const revenusCtx = document.getElementById('revenusChart').getContext('2d');
-        const revenusChart = new Chart(revenusCtx, {
-            type: 'line',
+        const caReservationsTheorique = /*[[${stats.caReservationsTheorique ?: 0}]]*/ 0;
+        const caReservationsReel = /*[[${stats.caReservationsReel ?: 0}]]*/ 0;
+        const caDiffusionsTheorique = /*[[${stats.caDiffusionsTheorique ?: 0}]]*/ 0;
+        const caDiffusionsReel = /*[[${stats.caDiffusionsReel ?: 0}]]*/ 0;
+        const caVentesProduitsTheorique = /*[[${stats.caVentesProduitsTheorique ?: 0}]]*/ 0;
+        const caVentesProduitsReel = /*[[${stats.caVentesProduitsReel ?: 0}]]*/ 0;
+
+        // Graphique comparaison Théorique vs Réel
+        const comparaisonCtx = document.getElementById('comparaisonChart').getContext('2d');
+        const comparaisonChart = new Chart(comparaisonCtx, {
+            type: 'bar',
             data: {
-                labels: /*[[${stats.revenusMensuels.![moisLabel]}]]*/ [],
+                labels: ['Réservations', 'Diffusions Publicité', 'Ventes Produits'],
                 datasets: [{
-                    label: 'Revenus Total',
-                    data: /*[[${stats.revenusMensuels.![revenusTotal]}]]*/ [],
-                    borderColor: 'rgb(102, 126, 234)',
-                    backgroundColor: 'rgba(102, 126, 234, 0.1)',
-                    tension: 0.4
+                    label: 'CA Théorique',
+                    data: [caReservationsTheorique, caDiffusionsTheorique, caVentesProduitsTheorique],
+                    backgroundColor: 'rgba(133, 135, 150, 0.8)',
+                    borderColor: 'rgb(133, 135, 150)',
+                    borderWidth: 1
                 }, {
-                    label: 'Revenus Réservations',
-                    data: /*[[${stats.revenusMensuels.![revenusReservations]}]]*/ [],
-                    borderColor: 'rgb(72, 198, 239)',
-                    backgroundColor: 'rgba(72, 198, 239, 0.1)',
-                    tension: 0.4
-                }, {
-                    label: 'Revenus Publicités',
-                    data: /*[[${stats.revenusMensuels.![revenusPublicites]}]]*/ [],
-                    borderColor: 'rgb(240, 147, 251)',
-                    backgroundColor: 'rgba(240, 147, 251, 0.1)',
-                    tension: 0.4
+                    label: 'CA Réel',
+                    data: [caReservationsReel, caDiffusionsReel, caVentesProduitsReel],
+                    backgroundColor: 'rgba(28, 200, 138, 0.8)',
+                    borderColor: 'rgb(28, 200, 138)',
+                    borderWidth: 1
                 }]
             },
             options: {
@@ -322,20 +477,18 @@
             }
         });
 
-        // Graphique répartition des revenus
+        // Graphique répartition des revenus réels
         const repartitionCtx = document.getElementById('repartitionChart').getContext('2d');
         const repartitionChart = new Chart(repartitionCtx, {
             type: 'doughnut',
             data: {
-                labels: ['Réservations', 'Publicités'],
+                labels: ['Réservations', 'Diffusions Publicité', 'Ventes Produits'],
                 datasets: [{
-                    data: [
-                        /*[[${stats.revenusReservations}]]*/ 0,
-                        /*[[${stats.revenusPublicites}]]*/ 0
-                    ],
+                    data: [caReservationsReel, caDiffusionsReel, caVentesProduitsReel],
                     backgroundColor: [
-                        'rgba(72, 198, 239, 0.8)',
-                        'rgba(240, 147, 251, 0.8)'
+                        'rgba(28, 200, 138, 0.8)',
+                        'rgba(246, 194, 62, 0.8)',
+                        'rgba(54, 185, 204, 0.8)'
                     ],
                     borderWidth: 2
                 }]
@@ -346,72 +499,17 @@
                 plugins: {
                     legend: {
                         position: 'bottom'
-                    }
-                }
-            }
-        });
-
-        // Graphique taux de remplissage
-        const tauxCtx = document.getElementById('tauxRemplissageChart').getContext('2d');
-        const tauxChart = new Chart(tauxCtx, {
-            type: 'bar',
-            data: {
-                labels: /*[[${stats.revenusMensuels.![moisLabel]}]]*/ [],
-                datasets: [{
-                    label: 'Taux de Remplissage (%)',
-                    data: /*[[${stats.revenusMensuels.![tauxRemplissage]}]]*/ [],
-                    backgroundColor: 'rgba(79, 172, 254, 0.8)',
-                    borderColor: 'rgb(79, 172, 254)',
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        max: 100,
-                        ticks: {
-                            callback: function(value) {
-                                return value + '%';
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                label += context.raw.toLocaleString('fr-FR') + ' Ar';
+                                return label;
                             }
-                        }
-                    }
-                }
-            }
-        });
-
-        // Graphique statut des départs
-        const statutCtx = document.getElementById('statutChart').getContext('2d');
-        const statutChart = new Chart(statutCtx, {
-            type: 'bar',
-            data: {
-                labels: ['Programmés', 'En Cours', 'Terminés', 'Annulés'],
-                datasets: [{
-                    label: 'Nombre de départs',
-                    data: [
-                        /*[[${stats.deprogrammes}]]*/ 0,
-                        /*[[${stats.departsEnCours}]]*/ 0,
-                        /*[[${stats.departsTermines}]]*/ 0,
-                        /*[[${stats.departsAnnules}]]*/ 0
-                    ],
-                    backgroundColor: [
-                        'rgba(54, 162, 235, 0.8)',
-                        'rgba(255, 206, 86, 0.8)',
-                        'rgba(75, 192, 192, 0.8)',
-                        'rgba(255, 99, 132, 0.8)'
-                    ]
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: {
-                            precision: 0
                         }
                     }
                 }
@@ -419,6 +517,5 @@
         });
         /*]]>*/
     </script>
-</div>
 </body>
 </html>

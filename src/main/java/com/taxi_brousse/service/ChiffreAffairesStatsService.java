@@ -1,18 +1,19 @@
 package com.taxi_brousse.service;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.time.YearMonth;
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.taxi_brousse.dto.ChiffreAffairesStatsDTO;
 import com.taxi_brousse.dto.DepartDTO;
 import com.taxi_brousse.repository.DepartRepository;
 import com.taxi_brousse.repository.StockDepartRepository;
 import com.taxi_brousse.repository.VenteProduitRepository;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
-import java.time.YearMonth;
-import java.util.List;
 
 @Service
 @Transactional(readOnly = true)
@@ -36,12 +37,18 @@ public class ChiffreAffairesStatsService {
         LocalDateTime startDate = yearMonth.atDay(1).atStartOfDay();
         LocalDateTime endDate = yearMonth.atEndOfMonth().atTime(23, 59, 59);
 
-        ChiffreAffairesStatsDTO stats = new ChiffreAffairesStatsDTO();
+        ChiffreAffairesStatsDTO stats = getStatistiquesPeriode(startDate, endDate);
         stats.setMois(mois);
         stats.setAnnee(annee);
+        
+        return stats;
+    }
+    
+    public ChiffreAffairesStatsDTO getStatistiquesPeriode(LocalDateTime startDate, LocalDateTime endDate) {
+        ChiffreAffairesStatsDTO stats = new ChiffreAffairesStatsDTO();
         stats.setDeviseCode("MGA");
 
-        // Récupérer tous les départs du mois (même logique que la page /departs)
+        // Récupérer tous les départs de la période (même logique que la page /departs)
         List<DepartDTO> departs = departRepository.findByDateRange(startDate, endDate).stream()
                 .map(d -> departService.findById(d.getId()))
                 .toList();

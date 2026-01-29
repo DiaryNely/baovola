@@ -170,11 +170,8 @@ public class DashboardService {
     }
     
     private Long countDepartsInPeriod(LocalDateTime start, LocalDateTime end) {
-        return departRepository.findAll().stream()
-                .filter(d -> d.getDateHeureDepart() != null &&
-                           d.getDateHeureDepart().isAfter(start) &&
-                           d.getDateHeureDepart().isBefore(end))
-                .count();
+        // Utiliser la requête SQL optimisée au lieu de charger tous les départs en mémoire
+        return (long) departRepository.findByDateRange(start, end).size();
     }
     
     private BigDecimal calculerChiffreAffaires(LocalDateTime start, LocalDateTime end) {
@@ -192,12 +189,8 @@ public class DashboardService {
         LocalDateTime maintenant = LocalDateTime.now();
         LocalDateTime debutJour = maintenant.toLocalDate().atStartOfDay();
         
-        // Départs d'aujourd'hui
-        List<Depart> departsAujourdhui = departRepository.findAll().stream()
-                .filter(d -> d.getDateHeureDepart() != null &&
-                           d.getDateHeureDepart().isAfter(debutJour) &&
-                           d.getDateHeureDepart().isBefore(maintenant.plusDays(1)))
-                .collect(Collectors.toList());
+        // Utiliser la requête SQL au lieu de charger tous les départs
+        List<Depart> departsAujourdhui = departRepository.findByDateRange(debutJour, maintenant.plusDays(1));
         
         if (departsAujourdhui.isEmpty()) {
             return 0.0;

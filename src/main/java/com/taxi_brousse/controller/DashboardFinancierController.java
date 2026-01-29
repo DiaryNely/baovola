@@ -7,9 +7,14 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.List;
 
-import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.Font;
+import org.apache.poi.ss.usermodel.HorizontalAlignment;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -28,10 +33,8 @@ import com.itextpdf.layout.Document;
 import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.element.Table;
 import com.itextpdf.layout.properties.TextAlignment;
-import com.taxi_brousse.dto.RentabiliteTrajetDTO;
-import com.taxi_brousse.dto.RevenuMensuelDTO;
-import com.taxi_brousse.dto.StatistiquesFinancieresDTO;
-import com.taxi_brousse.service.DashboardService;
+import com.taxi_brousse.dto.ChiffreAffairesStatsDTO;
+import com.taxi_brousse.service.ChiffreAffairesStatsService;
 
 import lombok.RequiredArgsConstructor;
 
@@ -40,7 +43,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class DashboardFinancierController {
 
-    private final DashboardService dashboardService;
+    private final ChiffreAffairesStatsService chiffreAffairesStatsService;
 
     @GetMapping("/financier")
     public String afficherDashboard(
@@ -48,9 +51,9 @@ public class DashboardFinancierController {
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate dateFin,
             Model model) {
 
-        // Par défaut: 6 derniers mois
+        // Par défaut: mois actuel
         if (dateDebut == null) {
-            dateDebut = LocalDate.now().minusMonths(6).withDayOfMonth(1);
+            dateDebut = LocalDate.now().withDayOfMonth(1);
         }
         if (dateFin == null) {
             dateFin = LocalDate.now();
@@ -59,7 +62,7 @@ public class DashboardFinancierController {
         LocalDateTime dateDebutTime = dateDebut.atStartOfDay();
         LocalDateTime dateFinTime = dateFin.atTime(23, 59, 59);
 
-        StatistiquesFinancieresDTO stats = dashboardService.getStatistiquesFinancieres(dateDebutTime, dateFinTime);
+        ChiffreAffairesStatsDTO stats = chiffreAffairesStatsService.getStatistiquesPeriode(dateDebutTime, dateFinTime);
 
         model.addAttribute("stats", stats);
         model.addAttribute("dateDebut", dateDebut);
@@ -74,7 +77,7 @@ public class DashboardFinancierController {
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate dateFin) throws IOException {
 
         if (dateDebut == null) {
-            dateDebut = LocalDate.now().minusMonths(6).withDayOfMonth(1);
+            dateDebut = LocalDate.now().withDayOfMonth(1);
         }
         if (dateFin == null) {
             dateFin = LocalDate.now();
@@ -83,7 +86,7 @@ public class DashboardFinancierController {
         LocalDateTime dateDebutTime = dateDebut.atStartOfDay();
         LocalDateTime dateFinTime = dateFin.atTime(23, 59, 59);
 
-        StatistiquesFinancieresDTO stats = dashboardService.getStatistiquesFinancieres(dateDebutTime, dateFinTime);
+        ChiffreAffairesStatsDTO stats = chiffreAffairesStatsService.getStatistiquesPeriode(dateDebutTime, dateFinTime);
 
         ByteArrayInputStream in = generateExcel(stats, dateDebut, dateFin);
 
@@ -102,7 +105,7 @@ public class DashboardFinancierController {
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate dateFin) throws IOException {
 
         if (dateDebut == null) {
-            dateDebut = LocalDate.now().minusMonths(6).withDayOfMonth(1);
+            dateDebut = LocalDate.now().withDayOfMonth(1);
         }
         if (dateFin == null) {
             dateFin = LocalDate.now();
@@ -111,7 +114,7 @@ public class DashboardFinancierController {
         LocalDateTime dateDebutTime = dateDebut.atStartOfDay();
         LocalDateTime dateFinTime = dateFin.atTime(23, 59, 59);
 
-        StatistiquesFinancieresDTO stats = dashboardService.getStatistiquesFinancieres(dateDebutTime, dateFinTime);
+        ChiffreAffairesStatsDTO stats = chiffreAffairesStatsService.getStatistiquesPeriode(dateDebutTime, dateFinTime);
 
         ByteArrayInputStream in = generatePDF(stats, dateDebut, dateFin);
 
@@ -124,7 +127,7 @@ public class DashboardFinancierController {
                 .body(new InputStreamResource(in));
     }
 
-    private ByteArrayInputStream generateExcel(StatistiquesFinancieresDTO stats, LocalDate dateDebut, LocalDate dateFin) throws IOException {
+    private ByteArrayInputStream generateExcel(ChiffreAffairesStatsDTO stats, LocalDate dateDebut, LocalDate dateFin) throws IOException {
         try (Workbook workbook = new XSSFWorkbook(); ByteArrayOutputStream out = new ByteArrayOutputStream()) {
 
             Sheet sheet = workbook.createSheet("Rapport Financier");
@@ -148,7 +151,7 @@ public class DashboardFinancierController {
             Cell titleCell = titleRow.createCell(0);
             titleCell.setCellValue("RAPPORT FINANCIER TAXI-BROUSSE");
             titleCell.setCellStyle(headerStyle);
-            sheet.addMergedRegion(new org.apache.poi.ss.util.CellRangeAddress(0, 0, 0, 5));
+            sheet.addMergedRegion(new org.apache.poi.ss.util.CellRangeAddress(0, 0, 0, 3));
 
             Row periodRow = sheet.createRow(rowIdx++);
             periodRow.createCell(0).setCellValue("Période: " + dateDebut.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) + 
@@ -156,63 +159,34 @@ public class DashboardFinancierController {
             
             rowIdx++; // Ligne vide
 
-            // Statistiques globales
+            // Chiffre d'Affaires Global
             Row globalHeader = sheet.createRow(rowIdx++);
-            globalHeader.createCell(0).setCellValue("STATISTIQUES GLOBALES");
+            globalHeader.createCell(0).setCellValue("CHIFFRE D'AFFAIRES GLOBAL");
             globalHeader.getCell(0).setCellStyle(headerStyle);
 
-            addRow(sheet, rowIdx++, "Revenus Total", stats.getRevenusTotal(), moneyStyle);
-            addRow(sheet, rowIdx++, "Revenus Réservations", stats.getRevenusReservations(), moneyStyle);
-            addRow(sheet, rowIdx++, "Revenus Publicités", stats.getRevenusPublicites(), moneyStyle);
-            addRow(sheet, rowIdx++, "Nombre de Départs", BigDecimal.valueOf(stats.getNombreDeparts()), null);
-            addRow(sheet, rowIdx++, "Nombre de Réservations", BigDecimal.valueOf(stats.getNombreReservations()), null);
-            addRow(sheet, rowIdx++, "Taux Remplissage Moyen (%)", BigDecimal.valueOf(stats.getTauxRemplissageMoyen()), null);
+            // En-tête tableau
+            Row tableHeader = sheet.createRow(rowIdx++);
+            tableHeader.createCell(0).setCellValue("Catégorie");
+            tableHeader.createCell(1).setCellValue("CA Théorique");
+            tableHeader.createCell(2).setCellValue("CA Réel");
+            tableHeader.createCell(3).setCellValue("Écart");
+
+            addRowWithEcart(sheet, rowIdx++, "Réservations", stats.getCaReservationsTheorique(), stats.getCaReservationsReel(), moneyStyle);
+            addRowWithEcart(sheet, rowIdx++, "Diffusions Publicité", stats.getCaDiffusionsTheorique(), stats.getCaDiffusionsReel(), moneyStyle);
+            addRowWithEcart(sheet, rowIdx++, "Ventes Produits", stats.getCaVentesProduitsTheorique(), stats.getCaVentesProduitsReel(), moneyStyle);
+            addRowWithEcart(sheet, rowIdx++, "TOTAL", stats.getTotalTheorique(), stats.getTotalReel(), moneyStyle);
 
             rowIdx++; // Ligne vide
 
-            // Répartition par statut
-            Row statutHeader = sheet.createRow(rowIdx++);
-            statutHeader.createCell(0).setCellValue("RÉPARTITION PAR STATUT");
-            statutHeader.getCell(0).setCellStyle(headerStyle);
+            // Nombre de départs
+            Row departsHeader = sheet.createRow(rowIdx++);
+            departsHeader.createCell(0).setCellValue("DÉTAILS");
+            departsHeader.getCell(0).setCellStyle(headerStyle);
 
-            addRow(sheet, rowIdx++, "Départs Programmés", BigDecimal.valueOf(stats.getDeprogrammes()), null);
-            addRow(sheet, rowIdx++, "Départs En Cours", BigDecimal.valueOf(stats.getDepartsEnCours()), null);
-            addRow(sheet, rowIdx++, "Départs Terminés", BigDecimal.valueOf(stats.getDepartsTermines()), null);
-            addRow(sheet, rowIdx++, "Départs Annulés", BigDecimal.valueOf(stats.getDepartsAnnules()), null);
-
-            rowIdx++; // Ligne vide
-
-            // Top 5 trajets
-            Row top5Header = sheet.createRow(rowIdx++);
-            top5Header.createCell(0).setCellValue("TOP 5 TRAJETS LES PLUS RENTABLES");
-            top5Header.getCell(0).setCellStyle(headerStyle);
-
-            Row headerRow = sheet.createRow(rowIdx++);
-            headerRow.createCell(0).setCellValue("Itinéraire");
-            headerRow.createCell(1).setCellValue("Départs");
-            headerRow.createCell(2).setCellValue("Réservations");
-            headerRow.createCell(3).setCellValue("Revenus Total");
-            headerRow.createCell(4).setCellValue("Rev. Réservations");
-            headerRow.createCell(5).setCellValue("Rev. Publicités");
-
-            for (RentabiliteTrajetDTO trajet : stats.getTop5Trajets()) {
-                Row row = sheet.createRow(rowIdx++);
-                row.createCell(0).setCellValue(trajet.getItineraire());
-                row.createCell(1).setCellValue(trajet.getNombreDeparts());
-                row.createCell(2).setCellValue(trajet.getNombreReservations());
-                Cell c3 = row.createCell(3);
-                c3.setCellValue(trajet.getRevenusTotal().doubleValue());
-                c3.setCellStyle(moneyStyle);
-                Cell c4 = row.createCell(4);
-                c4.setCellValue(trajet.getRevenusReservations().doubleValue());
-                c4.setCellStyle(moneyStyle);
-                Cell c5 = row.createCell(5);
-                c5.setCellValue(trajet.getRevenusPublicites().doubleValue());
-                c5.setCellStyle(moneyStyle);
-            }
+            addRow(sheet, rowIdx++, "Nombre de Départs", BigDecimal.valueOf(stats.getDeparts() != null ? stats.getDeparts().size() : 0), null);
 
             // Auto-size colonnes
-            for (int i = 0; i < 6; i++) {
+            for (int i = 0; i < 4; i++) {
                 sheet.autoSizeColumn(i);
             }
 
@@ -225,13 +199,31 @@ public class DashboardFinancierController {
         Row row = sheet.createRow(rowIdx);
         row.createCell(0).setCellValue(label);
         Cell valueCell = row.createCell(1);
-        valueCell.setCellValue(value.doubleValue());
+        valueCell.setCellValue(value != null ? value.doubleValue() : 0);
         if (style != null) {
             valueCell.setCellStyle(style);
         }
     }
 
-    private ByteArrayInputStream generatePDF(StatistiquesFinancieresDTO stats, LocalDate dateDebut, LocalDate dateFin) throws IOException {
+    private void addRowWithEcart(Sheet sheet, int rowIdx, String label, BigDecimal theorique, BigDecimal reel, CellStyle moneyStyle) {
+        Row row = sheet.createRow(rowIdx);
+        row.createCell(0).setCellValue(label);
+        
+        Cell theoriqueCell = row.createCell(1);
+        theoriqueCell.setCellValue(theorique != null ? theorique.doubleValue() : 0);
+        theoriqueCell.setCellStyle(moneyStyle);
+        
+        Cell reelCell = row.createCell(2);
+        reelCell.setCellValue(reel != null ? reel.doubleValue() : 0);
+        reelCell.setCellStyle(moneyStyle);
+        
+        Cell ecartCell = row.createCell(3);
+        BigDecimal ecart = (reel != null ? reel : BigDecimal.ZERO).subtract(theorique != null ? theorique : BigDecimal.ZERO);
+        ecartCell.setCellValue(ecart.doubleValue());
+        ecartCell.setCellStyle(moneyStyle);
+    }
+
+    private ByteArrayInputStream generatePDF(ChiffreAffairesStatsDTO stats, LocalDate dateDebut, LocalDate dateFin) throws IOException {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
 
         PdfWriter writer = new PdfWriter(out);
@@ -251,57 +243,59 @@ public class DashboardFinancierController {
                 .setMarginBottom(20);
         document.add(period);
 
-        // Statistiques globales
-        document.add(new Paragraph("STATISTIQUES GLOBALES").setBold().setFontSize(14));
-        Table globalTable = new Table(2);
-        globalTable.addCell("Revenus Total");
-        globalTable.addCell(formatMoney(stats.getRevenusTotal()));
-        globalTable.addCell("Revenus Réservations");
-        globalTable.addCell(formatMoney(stats.getRevenusReservations()));
-        globalTable.addCell("Revenus Publicités");
-        globalTable.addCell(formatMoney(stats.getRevenusPublicites()));
-        globalTable.addCell("Nombre de Départs");
-        globalTable.addCell(String.valueOf(stats.getNombreDeparts()));
-        globalTable.addCell("Nombre de Réservations");
-        globalTable.addCell(String.valueOf(stats.getNombreReservations()));
-        globalTable.addCell("Taux Remplissage Moyen");
-        globalTable.addCell(String.format("%.2f%%", stats.getTauxRemplissageMoyen()));
+        // Chiffre d'Affaires Global
+        document.add(new Paragraph("CHIFFRE D'AFFAIRES GLOBAL").setBold().setFontSize(14));
+        Table globalTable = new Table(4);
+        globalTable.addCell("Catégorie");
+        globalTable.addCell("CA Théorique");
+        globalTable.addCell("CA Réel");
+        globalTable.addCell("Écart");
+
+        // Réservations
+        globalTable.addCell("Réservations");
+        globalTable.addCell(formatMoney(stats.getCaReservationsTheorique()));
+        globalTable.addCell(formatMoney(stats.getCaReservationsReel()));
+        globalTable.addCell(formatMoney(calcEcart(stats.getCaReservationsTheorique(), stats.getCaReservationsReel())));
+
+        // Diffusions Publicité
+        globalTable.addCell("Diffusions Publicité");
+        globalTable.addCell(formatMoney(stats.getCaDiffusionsTheorique()));
+        globalTable.addCell(formatMoney(stats.getCaDiffusionsReel()));
+        globalTable.addCell(formatMoney(calcEcart(stats.getCaDiffusionsTheorique(), stats.getCaDiffusionsReel())));
+
+        // Ventes Produits
+        globalTable.addCell("Ventes Produits");
+        globalTable.addCell(formatMoney(stats.getCaVentesProduitsTheorique()));
+        globalTable.addCell(formatMoney(stats.getCaVentesProduitsReel()));
+        globalTable.addCell(formatMoney(calcEcart(stats.getCaVentesProduitsTheorique(), stats.getCaVentesProduitsReel())));
+
+        // Total
+        globalTable.addCell("TOTAL");
+        globalTable.addCell(formatMoney(stats.getTotalTheorique()));
+        globalTable.addCell(formatMoney(stats.getTotalReel()));
+        globalTable.addCell(formatMoney(calcEcart(stats.getTotalTheorique(), stats.getTotalReel())));
+
         document.add(globalTable);
 
-        // Répartition par statut
-        document.add(new Paragraph("\nRÉPARTITION PAR STATUT").setBold().setFontSize(14));
-        Table statutTable = new Table(2);
-        statutTable.addCell("Départs Programmés");
-        statutTable.addCell(String.valueOf(stats.getDeprogrammes()));
-        statutTable.addCell("Départs En Cours");
-        statutTable.addCell(String.valueOf(stats.getDepartsEnCours()));
-        statutTable.addCell("Départs Terminés");
-        statutTable.addCell(String.valueOf(stats.getDepartsTermines()));
-        statutTable.addCell("Départs Annulés");
-        statutTable.addCell(String.valueOf(stats.getDepartsAnnules()));
-        document.add(statutTable);
-
-        // Top 5 trajets
-        document.add(new Paragraph("\nTOP 5 TRAJETS LES PLUS RENTABLES").setBold().setFontSize(14));
-        Table top5Table = new Table(4);
-        top5Table.addCell("Itinéraire");
-        top5Table.addCell("Départs");
-        top5Table.addCell("Réservations");
-        top5Table.addCell("Revenus Total");
-
-        for (RentabiliteTrajetDTO trajet : stats.getTop5Trajets()) {
-            top5Table.addCell(trajet.getItineraire());
-            top5Table.addCell(String.valueOf(trajet.getNombreDeparts()));
-            top5Table.addCell(String.valueOf(trajet.getNombreReservations()));
-            top5Table.addCell(formatMoney(trajet.getRevenusTotal()));
-        }
-        document.add(top5Table);
+        // Détails
+        document.add(new Paragraph("\nDÉTAILS").setBold().setFontSize(14));
+        Table detailsTable = new Table(2);
+        detailsTable.addCell("Nombre de Départs");
+        detailsTable.addCell(String.valueOf(stats.getDeparts() != null ? stats.getDeparts().size() : 0));
+        document.add(detailsTable);
 
         document.close();
         return new ByteArrayInputStream(out.toByteArray());
     }
 
+    private BigDecimal calcEcart(BigDecimal theorique, BigDecimal reel) {
+        BigDecimal t = theorique != null ? theorique : BigDecimal.ZERO;
+        BigDecimal r = reel != null ? reel : BigDecimal.ZERO;
+        return r.subtract(t);
+    }
+
     private String formatMoney(BigDecimal value) {
+        if (value == null) return "0,00 Ar";
         return String.format("%,.2f Ar", value);
     }
 }

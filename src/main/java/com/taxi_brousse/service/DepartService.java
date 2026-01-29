@@ -72,31 +72,23 @@ public class DepartService {
 
     public List<DepartDTO> findDepartsDisponibles() {
         LocalDateTime now = LocalDateTime.now();
-        return departRepository.findAll().stream()
-                .filter(d -> d.getDateHeureDepart().isAfter(now))
-                .filter(d -> "PROGRAMME".equals(d.getRefDepartStatut().getCode()))
+        return departRepository.findDepartsDisponibles(now).stream()
                 .map(departMapper::toDTO)
                 .map(this::enrichDepartDTO)
                 .collect(Collectors.toList());
     }
 
     public List<DepartDTO> findByTrajetIdAndDateHeureAfter(Long trajetId, LocalDateTime dateHeure) {
-        return departRepository.findAll().stream()
-                .filter(d -> d.getTrajet().getId().equals(trajetId))
-                .filter(d -> d.getDateHeureDepart().isAfter(dateHeure))
+        return departRepository.findByTrajetIdAndDateHeureAfter(trajetId, dateHeure).stream()
                 .map(departMapper::toDTO)
                 .map(this::enrichDepartDTO)
                 .collect(Collectors.toList());
     }
     
     public List<DepartDTO> findByDateRange(LocalDateTime debut, LocalDateTime fin) {
-        return departRepository.findAll().stream()
-                .filter(d -> !d.getDateHeureDepart().isBefore(debut) && !d.getDateHeureDepart().isAfter(fin))
-                .filter(d -> !"ANNULE".equals(d.getRefDepartStatut().getCode()) && 
-                           !"TERMINE".equals(d.getRefDepartStatut().getCode()))
+        return departRepository.findActiveByDateRange(debut, fin).stream()
                 .map(departMapper::toDTO)
                 .map(this::enrichDepartDTO)
-                .sorted((d1, d2) -> d1.getDateHeureDepart().compareTo(d2.getDateHeureDepart()))
                 .collect(Collectors.toList());
     }
 

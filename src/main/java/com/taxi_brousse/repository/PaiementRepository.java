@@ -29,7 +29,7 @@ public interface PaiementRepository extends JpaRepository<Paiement, Long> {
     
     @Query("SELECT COALESCE(SUM(p.montant), 0) FROM Paiement p " +
            "WHERE p.reservation.depart.dateHeureDepart BETWEEN :startDate AND :endDate " +
-           "AND p.refPaiementStatut.code = 'EFFECTUE'")
+           "AND p.refPaiementStatut.code = 'VALIDE'")
     BigDecimal sumMontantPayeByDateRange(@Param("startDate") LocalDateTime startDate, 
                                         @Param("endDate") LocalDateTime endDate);
 }

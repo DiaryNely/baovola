@@ -76,14 +76,28 @@ public class VenteProduitService {
         VenteProduit entity = venteProduitMapper.toEntity(dto);
         VenteProduit saved = venteProduitRepository.save(entity);
         
-        // Le trigger PostgreSQL mettra à jour automatiquement le stock
+        // Mise à jour du stock côté Java (en plus du trigger PostgreSQL pour assurer la cohérence)
+        stock.setQuantiteVendue(stock.getQuantiteVendue() + dto.getQuantite());
+        stock.setQuantiteDisponible(stock.getQuantiteInitiale() - stock.getQuantiteVendue());
+        stockDepartRepository.save(stock);
         
         return venteProduitMapper.toDTO(saved);
     }
 
     public void deleteById(Long id) {
+        // Récupérer la vente avant suppression pour restaurer le stock
+        VenteProduit vente = venteProduitRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Vente non trouvée"));
+        
+        StockDepart stock = vente.getStockDepart();
+        if (stock != null) {
+            // Restaurer le stock côté Java
+            stock.setQuantiteVendue(Math.max(0, stock.getQuantiteVendue() - vente.getQuantite()));
+            stock.setQuantiteDisponible(stock.getQuantiteInitiale() - stock.getQuantiteVendue());
+            stockDepartRepository.save(stock);
+        }
+        
         venteProduitRepository.deleteById(id);
-        // Le trigger PostgreSQL remettra automatiquement le stock
     }
 
     public BigDecimal calculateTotalByDepartId(Long departId) {

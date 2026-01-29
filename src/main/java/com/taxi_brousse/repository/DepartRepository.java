@@ -96,5 +96,38 @@ public interface DepartRepository extends JpaRepository<Depart, Long> {
             @Param("dateDebut") LocalDateTime dateDebut,
             @Param("dateFin") LocalDateTime dateFin
     );
+    
+    /**
+     * Récupère les départs disponibles (programmés et dans le futur)
+     */
+    @Query("SELECT d FROM Depart d WHERE " +
+           "d.dateHeureDepart > :now AND " +
+           "d.refDepartStatut.code = 'PROGRAMME' " +
+           "ORDER BY d.dateHeureDepart ASC")
+    List<Depart> findDepartsDisponibles(@Param("now") LocalDateTime now);
+    
+    /**
+     * Récupère les départs pour un trajet après une date
+     */
+    @Query("SELECT d FROM Depart d WHERE " +
+           "d.trajet.id = :trajetId AND " +
+           "d.dateHeureDepart > :dateHeure " +
+           "ORDER BY d.dateHeureDepart ASC")
+    List<Depart> findByTrajetIdAndDateHeureAfter(
+            @Param("trajetId") Long trajetId,
+            @Param("dateHeure") LocalDateTime dateHeure
+    );
+    
+    /**
+     * Récupère les départs dans une plage de dates (non annulés, non terminés)
+     */
+    @Query("SELECT d FROM Depart d WHERE " +
+           "d.dateHeureDepart >= :debut AND d.dateHeureDepart <= :fin AND " +
+           "d.refDepartStatut.code NOT IN ('ANNULE', 'TERMINE') " +
+           "ORDER BY d.dateHeureDepart ASC")
+    List<Depart> findActiveByDateRange(
+            @Param("debut") LocalDateTime debut,
+            @Param("fin") LocalDateTime fin
+    );
 }
 

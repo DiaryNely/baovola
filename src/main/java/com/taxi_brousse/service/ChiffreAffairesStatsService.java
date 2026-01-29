@@ -94,6 +94,9 @@ public class ChiffreAffairesStatsService {
                 .add(stats.getCaDiffusionsReel())
                 .add(stats.getCaVentesProduitsReel());
         stats.setTotalReel(totalReel);
+        
+        // Ajouter la liste des départs pour le détail
+        stats.setDeparts(departs);
 
         return stats;
     }

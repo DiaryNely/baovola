@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 @Data
 @NoArgsConstructor
@@ -30,4 +31,7 @@ public class ChiffreAffairesStatsDTO {
     private Integer mois;
     private Integer annee;
     private String deviseCode;
+    
+    // Détails par départ
+    private List<DepartDTO> departs;
 }

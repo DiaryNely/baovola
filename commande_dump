@@ -1,4 +1,4 @@
-pg_dump -U utilisateur -h localhost -p 5432 taxi_brousse > taxi_brousse_complet.sql
+pg_dump -U postgres -h localhost -p 5432 taxi_brousse > taxi_brousse_complet.sql
 
 psql -U postgres -d taxi_brousse -f taxi_brousse_complet.sql
 

@@ -25,15 +25,7 @@ if %ERRORLEVEL% neq 0 (
 echo ✓ Tables creees avec succes
 echo.
 
-echo [2/3] Chargement des donnees de test...
-psql -f data_publicite_test.sql
-if %ERRORLEVEL% neq 0 (
-    echo ERREUR: Echec du chargement des donnees
-    pause
-    exit /b 1
-)
-echo ✓ Donnees de test chargees
-echo.
+
 
 echo [3/3] Verification...
 psql -c "SELECT * FROM v_ca_mensuel_diffusions WHERE annee = 2025 AND mois = 12;"

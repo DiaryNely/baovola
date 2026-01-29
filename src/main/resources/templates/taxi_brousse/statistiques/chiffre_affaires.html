@@ -304,6 +304,7 @@
                                                 <th>Trajet</th>
                                                 <th class="text-right">CA Réservations<br><small>(Théo / Réel)</small></th>
                                                 <th class="text-right">CA Publicité<br><small>(Théo / Réel)</small></th>
+                                                <th class="text-right">CA Produits<br><small>(Théo / Réel)</small></th>
                                                 <th class="text-right">Total Théorique</th>
                                                 <th class="text-right">Total Réel</th>
                                             </tr>
@@ -337,11 +338,19 @@
                                                         <span th:text="${#numbers.formatDecimal(depart.montantPublicitesPaye != null ? depart.montantPublicitesPaye : 0, 0, 'COMMA', 0, 'POINT')}">0</span>
                                                     </div>
                                                 </td>
+                                                <td class="text-right">
+                                                    <div class="text-theorique">
+                                                        <span th:text="${#numbers.formatDecimal(depart.valeurStockInitial != null ? depart.valeurStockInitial : 0, 0, 'COMMA', 0, 'POINT')}">0</span>
+                                                    </div>
+                                                    <div class="text-reel">
+                                                        <span th:text="${#numbers.formatDecimal(depart.montantVentesProduits != null ? depart.montantVentesProduits : 0, 0, 'COMMA', 0, 'POINT')}">0</span>
+                                                    </div>
+                                                </td>
                                                 <td class="text-right font-weight-bold text-theorique">
-                                                    <span th:text="${#numbers.formatDecimal((depart.chiffreAffairesMax != null ? depart.chiffreAffairesMax : 0) + (depart.montantDiffusionsPublicite != null ? depart.montantDiffusionsPublicite : 0), 0, 'COMMA', 0, 'POINT')}">0</span>
+                                                    <span th:text="${#numbers.formatDecimal((depart.chiffreAffairesMax != null ? depart.chiffreAffairesMax : 0) + (depart.montantDiffusionsPublicite != null ? depart.montantDiffusionsPublicite : 0) + (depart.valeurStockInitial != null ? depart.valeurStockInitial : 0), 0, 'COMMA', 0, 'POINT')}">0</span>
                                                 </td>
                                                 <td class="text-right font-weight-bold text-reel">
-                                                    <span th:text="${#numbers.formatDecimal((depart.chiffreAffaires != null ? depart.chiffreAffaires : 0) + (depart.montantPublicitesPaye != null ? depart.montantPublicitesPaye : 0), 0, 'COMMA', 0, 'POINT')}">0</span>
+                                                    <span th:text="${#numbers.formatDecimal((depart.chiffreAffaires != null ? depart.chiffreAffaires : 0) + (depart.montantPublicitesPaye != null ? depart.montantPublicitesPaye : 0) + (depart.montantVentesProduits != null ? depart.montantVentesProduits : 0), 0, 'COMMA', 0, 'POINT')}">0</span>
                                                 </td>
                                             </tr>
                                         </tbody>
@@ -364,11 +373,19 @@
                                                         <span th:text="${#numbers.formatDecimal(stats.caDiffusionsReel, 0, 'COMMA', 0, 'POINT')}">0</span>
                                                     </div>
                                                 </td>
+                                                <td class="text-right">
+                                                    <div class="text-theorique">
+                                                        <span th:text="${#numbers.formatDecimal(stats.caVentesProduitsTheorique, 0, 'COMMA', 0, 'POINT')}">0</span>
+                                                    </div>
+                                                    <div class="text-reel">
+                                                        <span th:text="${#numbers.formatDecimal(stats.caVentesProduitsReel, 0, 'COMMA', 0, 'POINT')}">0</span>
+                                                    </div>
+                                                </td>
                                                 <td class="text-right text-theorique">
-                                                    <span th:text="${#numbers.formatDecimal(stats.caReservationsTheorique + stats.caDiffusionsTheorique, 0, 'COMMA', 0, 'POINT')}">0</span>
+                                                    <span th:text="${#numbers.formatDecimal(stats.totalTheorique, 0, 'COMMA', 0, 'POINT')}">0</span>
                                                 </td>
                                                 <td class="text-right text-reel">
-                                                    <span th:text="${#numbers.formatDecimal(stats.caReservationsReel + stats.caDiffusionsReel, 0, 'COMMA', 0, 'POINT')}">0</span>
+                                                    <span th:text="${#numbers.formatDecimal(stats.totalReel, 0, 'COMMA', 0, 'POINT')}">0</span>
                                                 </td>
                                             </tr>
                                         </tfoot>

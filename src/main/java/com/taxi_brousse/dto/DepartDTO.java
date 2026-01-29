@@ -76,6 +76,10 @@ public class DepartDTO {
     private String chiffreAffairesMaxDeviseCode;
     private String chiffreAffairesMaxDeviseSymbole;
     
+    // CA Produits
+    private java.math.BigDecimal valeurStockInitial;  // CA théorique = valeur stock
+    private java.math.BigDecimal montantVentesProduits;  // CA réel = ventes
+    
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime createdAt;
 }

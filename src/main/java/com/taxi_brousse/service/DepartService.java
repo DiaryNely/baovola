@@ -48,6 +48,8 @@ public class DepartService {
     private final ReservationPassagerRepository reservationPassagerRepository;
     private final DepartMapper departMapper;
     private final com.taxi_brousse.repository.PaiementRepository paiementRepository;
+    private final com.taxi_brousse.repository.VenteProduitRepository venteProduitRepository;
+    private final com.taxi_brousse.repository.StockDepartRepository stockDepartRepository;
     private final com.taxi_brousse.repository.DepartPubliciteRepository departPubliciteRepository;
     private final com.taxi_brousse.repository.PaiementPubliciteRepository paiementPubliciteRepository;
     private final VehiculeSiegeConfigService vehiculeSiegeConfigService;
@@ -254,6 +256,17 @@ public class DepartService {
 
         // Calculer les paiements par société pour ce départ
         computePaiementsParSociete(dto);
+        
+        // Calculer la valeur du stock initial (CA théorique produits)
+        java.math.BigDecimal valeurStock = stockDepartRepository.calculateStockValue(dto.getId());
+        dto.setValeurStockInitial(valeurStock != null ? valeurStock : java.math.BigDecimal.ZERO);
+        
+        // Calculer le montant des ventes de produits (CA réel produits)
+        java.math.BigDecimal montantVentes = venteProduitRepository.findByDepartId(dto.getId())
+                .stream()
+                .map(vente -> vente.getMontantTotal())
+                .reduce(java.math.BigDecimal.ZERO, java.math.BigDecimal::add);
+        dto.setMontantVentesProduits(montantVentes);
         
         return dto;
     }

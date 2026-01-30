@@ -1,0 +1,161 @@
+// Taxi Brousse - Schéma simplifié pour dbdiagram.io
+// 18 tables essentielles
+
+// ==============================================
+// ACTEURS
+// ==============================================
+
+Table cooperative {
+  id bigint [pk]
+  code varchar [unique]
+  nom varchar
+}
+
+Table chauffeur {
+  id bigint [pk]
+  nom varchar
+  prenom varchar
+  numero_permis varchar [unique]
+}
+
+Table client {
+  id bigint [pk]
+  nom varchar
+  prenom varchar
+  telephone varchar
+}
+
+Table vehicule {
+  id bigint [pk]
+  immatriculation varchar [unique]
+  marque varchar
+  nombre_places integer
+}
+
+Table lieu {
+  id bigint [pk]
+  nom varchar
+}
+
+// ==============================================
+// TRAJETS ET DEPARTS
+// ==============================================
+
+Table trajet {
+  id bigint [pk]
+  code varchar [unique]
+  libelle varchar
+  lieu_depart_id bigint [ref: > lieu.id]
+  lieu_arrivee_id bigint [ref: > lieu.id]
+  distance_km decimal
+}
+
+Table depart {
+  id bigint [pk]
+  code varchar [unique]
+  cooperative_id bigint [ref: > cooperative.id]
+  trajet_id bigint [ref: > trajet.id]
+  vehicule_id bigint [ref: > vehicule.id]
+  date_heure_depart timestamp
+  statut varchar
+}
+
+Table chauffeur_vehicule {
+  chauffeur_id bigint [pk, ref: > chauffeur.id]
+  vehicule_id bigint [pk, ref: > vehicule.id]
+  date_debut timestamp [pk]
+  role varchar
+}
+
+// ==============================================
+// RESERVATION ET BILLETTERIE
+// ==============================================
+
+Table reservation {
+  id bigint [pk]
+  code varchar [unique]
+  client_id bigint [ref: > client.id]
+  depart_id bigint [ref: > depart.id]
+  date_creation timestamp
+  montant_total decimal
+  statut varchar
+}
+
+Table reservation_passager {
+  id bigint [pk]
+  reservation_id bigint [ref: > reservation.id]
+  nom varchar
+  prenom varchar
+  numero_siege integer
+  montant_tarif decimal
+}
+
+Table paiement {
+  id bigint [pk]
+  reservation_id bigint [ref: > reservation.id]
+  montant decimal
+  date_paiement timestamp
+  methode varchar
+}
+
+Table billet {
+  id bigint [pk]
+  reservation_id bigint [ref: > reservation.id]
+  numero varchar [unique]
+  date_emission timestamp
+}
+
+// ==============================================
+// PUBLICITE
+// ==============================================
+
+Table societe_publicitaire {
+  id bigint [pk]
+  code varchar [unique]
+  nom varchar
+}
+
+Table publicite {
+  id bigint [pk]
+  code varchar [unique]
+  societe_publicitaire_id bigint [ref: > societe_publicitaire.id]
+  titre varchar
+  date_debut_validite date
+  date_fin_validite date
+}
+
+Table depart_publicite {
+  id bigint [pk]
+  depart_id bigint [ref: > depart.id]
+  publicite_id bigint [ref: > publicite.id]
+  montant_facture decimal
+  date_diffusion timestamp
+  nombre_repetitions integer
+}
+
+// ==============================================
+// PRODUITS
+// ==============================================
+
+Table produit {
+  id bigint [pk]
+  code varchar [unique]
+  nom varchar
+  prix_vente decimal
+}
+
+Table stock_depart {
+  id bigint [pk]
+  depart_id bigint [ref: > depart.id]
+  produit_id bigint [ref: > produit.id]
+  quantite_initiale integer
+  quantite_disponible integer
+}
+
+Table vente_produit {
+  id bigint [pk]
+  stock_depart_id bigint [ref: > stock_depart.id]
+  quantite integer
+  montant_total decimal
+  date_vente timestamp
+}
